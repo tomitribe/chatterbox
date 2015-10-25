@@ -32,7 +32,7 @@
 
     <artifactId>twitter-connector-api</artifactId>
     <packaging>jar</packaging>
-    <name>Connector Starter :: API</name>
+    <name>Twitter Connector :: API</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

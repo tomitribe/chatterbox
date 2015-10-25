@@ -32,7 +32,7 @@
 
     <artifactId>twitter-connector-rar</artifactId>
     <packaging>rar</packaging>
-    <name>Connector Starter :: Resource Adapter</name>
+    <name>Twitter Connector :: Resource Adapter</name>
 
     <dependencies>
         <dependency>

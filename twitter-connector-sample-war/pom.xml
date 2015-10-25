@@ -32,7 +32,7 @@
 
     <artifactId>twitter-connector-sample-war</artifactId>
     <packaging>war</packaging>
-    <name>Connector Starter :: Sample WAR</name>
+    <name>Twitter Connector :: Sample WAR</name>
 
     <dependencies>
         <dependency>
