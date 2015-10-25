@@ -160,12 +160,26 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
         private boolean filterUser(final Status status, final Method m) {
             return ! m.isAnnotationPresent(User.class) || "".equals(m.getAnnotation(User.class).value())
-                    || Pattern.matches(m.getAnnotation(User.class).value(), status.getUser().getScreenName());
+                    || templateMatches(m.getAnnotation(User.class).value(), status.getUser().getScreenName());
         }
 
         private boolean filterTweet(final Status status, final Method m) {
             return !m.isAnnotationPresent(Tweet.class) || "".equals(m.getAnnotation(Tweet.class).value())
-                    || Pattern.matches(m.getAnnotation(Tweet.class).value(), status.getText());
+                    || templateMatches(m.getAnnotation(Tweet.class).value(), status.getText());
+        }
+
+        private boolean templateMatches(final String pattern, final String input) {
+            try {
+                if (Pattern.matches(pattern, input)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+
+            final Template template = new Template(pattern);
+            final Map<String, List<String>> values = new HashMap<>();
+            return template.match(input, values);
         }
 
         private boolean isPublic(final Method m) {
@@ -251,7 +265,6 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
         return values;
     }
 
-
     private static Template getTemplate(final Annotation annotation) {
         if (annotation == null) {
             return null;
@@ -276,5 +289,4 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
         return null;
     }
-
 }
