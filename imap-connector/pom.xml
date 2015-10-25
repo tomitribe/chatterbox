@@ -19,21 +19,14 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>oss-parent</artifactId>
-    <version>2</version>
+    <artifactId>chatterbox-parent</artifactId>
+    <version>0.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>imap-connector-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
   <name>IMAP Connector</name>
-
-  <scm>
-    <connection>scm:git:git@github.com:tomitribe/imap-connector.git</connection>
-    <url>scm:git:git@github.com:tomitribe/imap-connector.git</url>
-    <developerConnection>scm:git:git@github.com:tomitribe/imap-connector.git</developerConnection>
-    <tag>HEAD</tag>
-  </scm>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -44,16 +37,6 @@
     <version.openejb>4.7.2</version.openejb>
     <maven.checkstyle.plugin.version>2.16</maven.checkstyle.plugin.version>
   </properties>
-
-  <repositories>
-    <repository>
-      <id>snapshots</id>
-      <url>http://repository.tomitribe.com/content/repositories/snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -80,7 +63,7 @@
     <module>imap-connector-api</module>
     <module>imap-connector-impl</module>
     <module>imap-connector-rar</module>
-    <module>imap-connector-sample</module>
+    <module>imap-connector-sample-war</module>
   </modules>
   <build>
     <defaultGoal>install</defaultGoal>

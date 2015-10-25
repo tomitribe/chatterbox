@@ -1,7 +1,0 @@
-<Resource id="OutgoingMail" type="javax.mail.Session">
-    mail.smtp.host=smtp.gmail.com
-    mail.smtp.port=467
-    mail.transport.protocol=smtps
-    mail.smtp.auth=true
-    mail.smtp.starttls.enable=true
-</Resource>

@@ -24,8 +24,7 @@ import java.lang.annotation.Target;
 
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
-public @interface ImapMailFilter {
-    String subjectPattern() default "";
-    String fromPattern() default "";
+@Target({ElementType.PARAMETER})
+public @interface BodyParam {
+    String value() default "";
 }

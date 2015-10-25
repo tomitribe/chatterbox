@@ -24,9 +24,7 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.mail.search.FlagTerm;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ImapCheckThread extends Thread {
@@ -38,8 +36,6 @@ public class ImapCheckThread extends Thread {
         this.resourceAdapter = resourceAdapter;
         final Properties properties = System.getProperties();
         session = Session.getDefaultInstance(properties, null);
-        session.setDebug(true);
-        session.setDebugOut(System.out);
     }
 
     @Override
@@ -48,11 +44,7 @@ public class ImapCheckThread extends Thread {
             try {
                 final Store store = session.getStore(resourceAdapter.getProtocol());
                 store.connect(resourceAdapter.getHost(), resourceAdapter.getPort(), resourceAdapter.getUsername(), resourceAdapter.getPassword());
-
-                final Set<String> folders = resourceAdapter.folderSpecs.keySet();
-                for (final String folderName : folders) {
-                    processFolder(store, folderName);
-                }
+                processFolder(store, "inbox");
             } catch (MessagingException e) {
                 // ignore
             }
@@ -78,17 +70,7 @@ public class ImapCheckThread extends Thread {
 
         for (final Message message : messages) {
             message.setFlag(Flags.Flag.SEEN, true);
-            final Set<ImapActivationSpec> imapActivationSpecs = resourceAdapter.folderSpecs.get(folderName);
-            for (final ImapActivationSpec imapActivationSpec : imapActivationSpecs) {
-                final Set<ImapResourceAdapter.EndpointTarget> endpointTargets = resourceAdapter.specTargets.get(imapActivationSpec);
-                for (final ImapResourceAdapter.EndpointTarget endpointTarget : endpointTargets) {
-                    try {
-                        endpointTarget.invoke(message);
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        // TODO: log this out
-                    }
-                }
-            }
+            resourceAdapter.process(message);
         }
     }
 

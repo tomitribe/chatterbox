@@ -29,7 +29,7 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>imap-connector-sample-ejb</artifactId>
+  <artifactId>imap-connector-sample-war</artifactId>
   <packaging>war</packaging>
   <name>IMAP Connector :: Sample</name>
 

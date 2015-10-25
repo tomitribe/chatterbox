@@ -17,34 +17,54 @@
 package org.tomitribe.imap.adapter;
 
 import org.tomitribe.imap.api.Body;
+import org.tomitribe.imap.api.BodyParam;
 import org.tomitribe.imap.api.From;
-import org.tomitribe.imap.api.ImapMailFilter;
+import org.tomitribe.imap.api.FromParam;
+import org.tomitribe.imap.api.InvokeAllMatches;
 import org.tomitribe.imap.api.Subject;
+import org.tomitribe.imap.api.SubjectParam;
+import org.tomitribe.util.editor.Converter;
 
+import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 import javax.resource.ResourceException;
-import javax.resource.spi.*;
+import javax.resource.spi.ActivationSpec;
+import javax.resource.spi.BootstrapContext;
+import javax.resource.spi.ConfigProperty;
+import javax.resource.spi.Connector;
+import javax.resource.spi.ResourceAdapter;
+import javax.resource.spi.ResourceAdapterInternalException;
 import javax.resource.spi.endpoint.MessageEndpoint;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
-import javax.resource.spi.work.Work;
-import javax.resource.spi.work.WorkManager;
 import javax.transaction.xa.XAResource;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Connector(description = "IMAP ResourceAdapter", displayName = "IMAP ResourceAdapter", eisType = "IMAP Adapter", version = "1.0")
 public class ImapResourceAdapter implements ResourceAdapter {
 
-    private WorkManager workManager;
-    final Map<ImapActivationSpec, MessageEndpoint> endpoints = new ConcurrentHashMap<>();
-    final Map<ImapActivationSpec, Set<EndpointTarget>> specTargets = new ConcurrentHashMap<>();
-    final Map<String, Set<ImapActivationSpec>> folderSpecs = new ConcurrentHashMap<>();
+    private static final Logger LOGGER = Logger.getLogger(ImapResourceAdapter.class.getName());
+
+    final Map<ImapActivationSpec, EndpointTarget> targets = new ConcurrentHashMap<>();
+
     private ImapCheckThread worker;
 
     @ConfigProperty
@@ -63,7 +83,6 @@ public class ImapResourceAdapter implements ResourceAdapter {
     private String protocol;
 
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
-        workManager = bootstrapContext.getWorkManager();
         worker = new ImapCheckThread(this);
         worker.start();
     }
@@ -73,160 +92,300 @@ public class ImapResourceAdapter implements ResourceAdapter {
     }
 
     public void endpointActivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec)
-            throws ResourceException
-    {
+            throws ResourceException {
         final ImapActivationSpec imapActivationSpec = (ImapActivationSpec) activationSpec;
+        final MessageEndpoint messageEndpoint = messageEndpointFactory.createEndpoint(null);
 
-        workManager.scheduleWork(new Work() {
+        final Class<?> endpointClass = imapActivationSpec.getBeanClass() != null ? imapActivationSpec
+                .getBeanClass() : messageEndpointFactory.getEndpointClass();
 
-            @Override
-            public void run() {
-                try {
-                    final MessageEndpoint messageEndpoint = messageEndpointFactory.createEndpoint(null);
-                    endpoints.put(imapActivationSpec, messageEndpoint);
-
-                    final Class<?> endpointClass = imapActivationSpec.getBeanClass() != null ? imapActivationSpec
-                            .getBeanClass() : messageEndpointFactory.getEndpointClass();
-
-                    final List<EndpointTarget> targets = findTargets(messageEndpoint, endpointClass);
-
-                    if (specTargets.get(imapActivationSpec) == null) {
-                        specTargets.put(imapActivationSpec, new HashSet<>());
-                    }
-
-                    specTargets.get(imapActivationSpec).addAll(targets);
-
-                    final String folder = imapActivationSpec.getFolder();
-                    if (folderSpecs.get(folder) == null) {
-                        folderSpecs.put(folder, new HashSet<>());
-                    }
-
-                    folderSpecs.get(folder).add(imapActivationSpec);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void release() {
-            }
-
-        });
+        final EndpointTarget target = new EndpointTarget(messageEndpoint, endpointClass);
+        targets.put(imapActivationSpec, target);
 
     }
 
-    private List<EndpointTarget> findTargets(final MessageEndpoint messageEndpoint, final Class<?> endpointClass) {
-
-        final List<EndpointTarget> results = new ArrayList<>();
-
-        final Method[] methods = endpointClass.getMethods();
-        for (final Method method : methods) {
-            if (!Modifier.isPublic(method.getModifiers())) {
-                continue;
-            }
-
-            if (method.getAnnotation(ImapMailFilter.class) == null) {
-                continue;
-            }
-
-            results.add(new EndpointTarget(messageEndpoint, method));
-        }
-
-        return results;
-    }
-
-    public void endpointDeactivation(MessageEndpointFactory messageEndpointFactory, ActivationSpec activationSpec) {
+    public void endpointDeactivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec) {
         final ImapActivationSpec imapActivationSpec = (ImapActivationSpec) activationSpec;
-        final MessageEndpoint messageEndpoint = endpoints.get(imapActivationSpec);
 
-        if (messageEndpoint == null) {
-            return;
+        final EndpointTarget endpointTarget = targets.get(imapActivationSpec);
+        if (endpointTarget == null) {
+            throw new IllegalStateException("No EndpointTarget to undeploy for ActivationSpec " + activationSpec);
         }
 
-        messageEndpoint.release();
-        specTargets.remove(imapActivationSpec);
-
-        for (final String folder : folderSpecs.keySet()) {
-            final Set<ImapActivationSpec> imapActivationSpecs = folderSpecs.get(folder);
-            imapActivationSpecs.remove(imapActivationSpec);
-
-            if (imapActivationSpecs.isEmpty()) {
-                folderSpecs.remove(folder);
-            }
-        }
+        endpointTarget.messageEndpoint.release();
     }
 
     public XAResource[] getXAResources(ActivationSpec[] activationSpecs) throws ResourceException {
         return new XAResource[0];
     }
 
+    public void process(final Message message) {
+        final Collection<EndpointTarget> endpoints = targets.values();
+        for (final EndpointTarget endpoint : endpoints) {
+            endpoint.invoke(message);
+        }
+    }
+
     public static class EndpointTarget {
         private final MessageEndpoint messageEndpoint;
-        private final Method method;
+        private final Class<?> clazz;
 
-        public EndpointTarget(final MessageEndpoint messageEndpoint, final Method method) {
+        public EndpointTarget(final MessageEndpoint messageEndpoint, final Class<?> clazz) {
             this.messageEndpoint = messageEndpoint;
-            this.method = method;
+            this.clazz = clazz;
         }
 
-        public Object invoke(final Message message) throws InvocationTargetException, IllegalAccessException {
+        public void invoke(Message message) {
+
+            // find matching method(s)
+
+            final List<Method> matchingMethods =
+                    Arrays.asList(clazz.getDeclaredMethods())
+                            .stream()
+                            .sorted((m1, m2) -> m1.toString().compareTo(m2.toString()))
+                            .filter(this::isPublic)
+                            .filter(this::isNotFinal)
+                            .filter(this::isNotAbstract)
+                            .filter(m -> filterSender(message, m))
+                            .filter(m -> filterSubject(message, m))
+                            .filter(m -> filterMessage(message, m))
+                            .collect(Collectors.toList());
+
+            if (matchingMethods == null || matchingMethods.size() == 0) {
+                // log this
+                return;
+            }
+
+            if (this.clazz.isAnnotationPresent(InvokeAllMatches.class)) {
+                for (final Method method : matchingMethods) {
+                    try {
+                        invoke(method, InternetAddress.toString(message.getFrom()),
+                                message.getSubject(),
+                                getMessageText(message));
+                    } catch (MessagingException e) {
+                        LOGGER.log(Level.SEVERE, "Unable to invoke method " + method.toString());
+                    }
+                }
+            } else {
+                try {
+                    invoke(matchingMethods.get(0), InternetAddress.toString(message.getFrom()),
+                            message.getSubject(),
+                            getMessageText(message));
+                } catch (MessagingException e) {
+                    LOGGER.log(Level.SEVERE, "Unable to invoke method " + matchingMethods.get(0).toString());
+                }
+            }
+        }
+
+        private boolean filterMessage(final Message message, final Method m) {
+            try {
+                final String messageBody = message.getContent().toString();
+
+                return ! m.isAnnotationPresent(Body.class) || "".equals(m.getAnnotation(Body.class).value())
+                        || templateMatches(m.getAnnotation(Body.class).value(), messageBody);
+
+            } catch (IOException | MessagingException e) {
+                return false;
+            }
+        }
+
+        private boolean filterSender(final Message message, final Method m) {
+            try {
+                final String sender = InternetAddress.toString(message.getFrom());
+
+                return ! m.isAnnotationPresent(From.class) || "".equals(m.getAnnotation(From.class).value())
+                        || templateMatches(m.getAnnotation(From.class).value(), sender);
+
+            } catch (MessagingException e) {
+                return false;
+            }
+        }
+
+        private boolean filterSubject(final Message message, final Method m) {
+            try {
+                final String subject = message.getSubject();
+
+                return ! m.isAnnotationPresent(Subject.class) || "".equals(m.getAnnotation(Subject.class).value())
+                        || templateMatches(m.getAnnotation(Subject.class).value(), subject);
+
+            } catch (MessagingException e) {
+                return false;
+            }
+        }
+
+        private boolean templateMatches(final String pattern, final String input) {
+            try {
+                if (Pattern.matches(pattern, input)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+
+            final Template template = new Template(pattern);
+            final Map<String, List<String>> values = new HashMap<>();
+            return template.match(input, values);
+        }
+
+        private boolean isPublic(final Method m) {
+            return Modifier.isPublic(m.getModifiers());
+        }
+
+        private boolean isNotAbstract(final Method m) {
+            return !Modifier.isAbstract(m.getModifiers());
+        }
+
+        private boolean isNotFinal(final Method m) {
+            return !Modifier.isFinal(m.getModifiers());
+        }
+
+        private void invoke(final Method method, final String sender, final String subject, final String message) {
             try {
                 try {
                     messageEndpoint.beforeDelivery(method);
-
-                    final Parameter[] parameters = method.getParameters();
-                    final Object[] values = new Object[parameters.length];
-
-                    for (int i = 0; i < parameters.length; i++) {
-                        final Parameter parameter = parameters[i];
-
-                        if (!String.class.equals(parameter.getType())) {
-                            values[i] = null;
-                        }
-
-                        if (String.class.equals(parameter.getType())
-                                && parameter.getAnnotation(Subject.class) != null) {
-                            try {
-                                values[i] = message.getSubject();
-                            } catch (MessagingException e) {
-                                // ignore
-                            }
-                        }
-
-                        try {
-                            if (String.class.equals(parameter.getType())
-                                    && parameter.getAnnotation(From.class) != null
-                                    && message.getFrom() != null
-                                    && message.getFrom().length > 0) {
-                                values[i] = message.getFrom()[0].toString();
-                            }
-                        } catch (MessagingException e) {
-                            // ignore
-                        }
-
-                        if (parameter.getAnnotation(Body.class) != null) {
-                            try {
-                                values[i] = message.getContent();
-                            } catch (IOException | MessagingException e) {
-                                // ignore
-                            }
-                        }
-
-                        if (Message.class.equals(parameter.getType())) {
-                            values[i] = message;
-                        }
-                    }
-
-                    return method.invoke(messageEndpoint, values);
+                    final Object[] values = getValues(method, sender, subject, message);
+                    method.invoke(messageEndpoint, values);
                 } finally {
                     messageEndpoint.afterDelivery();
                 }
-            } catch (NoSuchMethodException e) {
-                throw new RuntimeException(e);
-            } catch (ResourceException e) {
-                throw new RuntimeException(e);
+            } catch (final NoSuchMethodException | ResourceException | IllegalAccessException | InvocationTargetException e) {
+                LOGGER.log(Level.SEVERE, "Unable to call method: " + method.toString());
             }
         }
+    }
+
+    private static Object[] getValues(final Method method, final String sender, final String subject, final String message) {
+
+        if (method == null) {
+            return null;
+        }
+
+        final Parameter[] parameters = method.getParameters();
+        if (parameters.length == 0) {
+            return new Object[0];
+        }
+
+        final Template senderTemplate = getTemplate(method.getAnnotation(From.class));
+        final Map<String, List<String>> senderParamValues = new HashMap<>();
+        if (senderTemplate != null) {
+            senderTemplate.match(sender, senderParamValues);
+        }
+
+        final Template messageTextTemplate = getTemplate(method.getAnnotation(Body.class));
+        final Map<String, List<String>> messageTextParamValues = new HashMap<>();
+        if (messageTextTemplate != null) {
+            messageTextTemplate.match(message, messageTextParamValues);
+        }
+
+        final Template subjectTemplate = getTemplate(method.getAnnotation(Subject.class));
+        final Map<String, List<String>> subjectParamValues = new HashMap<>();
+        if (subjectTemplate != null) {
+            subjectTemplate.match(subject, subjectParamValues);
+        }
+
+        final Object[] values = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            final Parameter parameter = parameters[i];
+
+            values[i] = null;
+
+            if (parameter.isAnnotationPresent(FromParam.class)) {
+                final FromParam senderParam = parameter.getAnnotation(FromParam.class);
+                if (senderParam.value() == null || senderParam.value().length() == 0) {
+                    values[i] = Converter.convert(sender, parameter.getType(), null);
+                } else {
+                    final List<String> paramValues = senderParamValues.get(senderParam.value());
+                    final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);
+                    values[i] = Converter.convert(paramValue, parameter.getType(), null);
+                }
+            }
+
+            if (parameter.isAnnotationPresent(BodyParam.class)) {
+                final BodyParam messageTextParam = parameter.getAnnotation(BodyParam.class);
+                if (messageTextParam.value() == null || messageTextParam.value().length() == 0) {
+                    values[i] = Converter.convert(message, parameter.getType(), null);
+                } else {
+                    final List<String> paramValues = messageTextParamValues.get(messageTextParam.value());
+                    final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);
+                    values[i] = Converter.convert(paramValue, parameter.getType(), null);
+                }
+            }
+
+            if (parameter.isAnnotationPresent(SubjectParam.class)) {
+                final SubjectParam subjectParam = parameter.getAnnotation(SubjectParam.class);
+                if (subjectParam.value() == null || subjectParam.value().length() == 0) {
+                    values[i] = Converter.convert(subject, parameter.getType(), null);
+                } else {
+                    final List<String> paramValues = messageTextParamValues.get(subjectParam.value());
+                    final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);
+                    values[i] = Converter.convert(paramValue, parameter.getType(), null);
+                }
+            }
+        }
+
+        return values;
+    }
+
+    private static Template getTemplate(final Annotation annotation) {
+        if (annotation == null) {
+            return null;
+        }
+
+        try {
+
+            final Method patternMethod = annotation.getClass().getMethod("value");
+            if (patternMethod == null) {
+                return null;
+            }
+
+            if (!String.class.equals(patternMethod.getReturnType())) {
+                return null;
+            }
+
+            final String pattern = (String) patternMethod.invoke(annotation);
+            return new Template(pattern);
+        } catch (final Exception e) {
+            // ignore
+        }
+
+        return null;
+    }
+
+    private static String getMessageText(final Message message) {
+        try {
+            if (message instanceof MimeMessage) {
+                final MimeMessage m = (MimeMessage) message;
+                Object contentObject = m.getContent();
+                if (contentObject instanceof Multipart) {
+                    BodyPart clearTextPart = null;
+
+                    Multipart content = (Multipart) contentObject;
+                    int count = content.getCount();
+                    for (int i = 0; i < count; i++) {
+                        BodyPart part = content.getBodyPart(i);
+                        if (part.isMimeType("text/plain")) {
+                            clearTextPart = part;
+                            break;
+                        }
+                    }
+
+                    if (clearTextPart != null) {
+                        return (String) clearTextPart.getContent();
+                    }
+
+                } else if (contentObject instanceof String) {
+                    return (String) contentObject;
+                } else {
+                    LOGGER.log(Level.WARNING, "Unable to get message text");
+                    return "";
+                }
+            }
+        } catch (IOException | MessagingException e) {
+            LOGGER.log(Level.WARNING, "Unable to get message text");
+        }
+
+        return "";
     }
 
     public String getHost() {

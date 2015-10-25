@@ -24,6 +24,7 @@ import java.lang.annotation.Target;
 
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER})
+@Target({ElementType.METHOD})
 public @interface Subject {
+    String value() default "";
 }

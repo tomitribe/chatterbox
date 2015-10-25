@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD})
-public @interface From {
+@Target({ElementType.PARAMETER})
+public @interface FromParam {
     String value() default "";
 }
