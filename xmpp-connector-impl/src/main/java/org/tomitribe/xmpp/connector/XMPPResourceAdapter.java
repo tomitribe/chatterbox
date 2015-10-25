@@ -51,6 +51,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.resource.ResourceException;
@@ -292,6 +293,14 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
         }
 
         private boolean templateMatches(final String pattern, final String input) {
+            try {
+                if (Pattern.matches(pattern, input)) {
+                    return true;
+                }
+            } catch (Exception e) {
+                // ignore
+            }
+
             final Template template = new Template(pattern);
             final Map<String, List<String>> values = new HashMap<>();
             return template.match(input, values);
