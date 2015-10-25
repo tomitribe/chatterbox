@@ -16,19 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.tomitribe.xmpp.connector.test;
+package org.tomitribe.xmpp.connector.inflow;
 
-import org.apache.ziplock.JarLocation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.io.File;
-
-
-public class Basedir {
-
-    public static File basedir(final String s) {
-        final File classes = JarLocation.jarLocation(XMPPRATest.class);
-        final File target = classes.getParentFile();
-        final File basedir = target.getParentFile();
-        return new File(basedir, s);
-    }
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface MessageText {
+    String value() default "";
 }

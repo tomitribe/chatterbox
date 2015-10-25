@@ -16,31 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.tomitribe.xmpp.connector.inflow;
 
-package org.tomitribe.xmpp.connector.test;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.jivesoftware.smack.Chat;
-import org.jivesoftware.smack.MessageListener;
-import org.jivesoftware.smack.packet.Message;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class SimpleMessageListener implements MessageListener{
-    private static SimpleMessageListener instance = new SimpleMessageListener();
-
-    public static SimpleMessageListener getInstance() {
-        return instance;
-    }
-
-    private final List<String> messagesReceived = new ArrayList<String>();
-
-    public List<String> getMessagesReceived() {
-        return messagesReceived;
-    }
-
-    @Override
-    public void processMessage(Chat chat, Message message) {
-        messagesReceived.add(message.getBody());
-    }
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.PARAMETER)
+public @interface SenderParam {
+    String value() default "";
 }

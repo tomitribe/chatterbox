@@ -18,9 +18,13 @@
  */
 package org.tomitribe.xmpp.connector;
 
-import org.tomitribe.xmpp.connector.inflow.XMPPActivation;
+import org.tomitribe.util.editor.Converter;
+import org.tomitribe.xmpp.connector.inflow.InvokeAllMatches;
+import org.tomitribe.xmpp.connector.inflow.MessageText;
+import org.tomitribe.xmpp.connector.inflow.MessageTextParam;
+import org.tomitribe.xmpp.connector.inflow.Sender;
+import org.tomitribe.xmpp.connector.inflow.SenderParam;
 import org.tomitribe.xmpp.connector.inflow.XMPPActivationSpec;
-import org.tomitribe.xmpp.connector.inflow.XMPPMessageListener;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
@@ -34,11 +38,20 @@ import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.ActivationSpec;
@@ -51,7 +64,6 @@ import javax.resource.spi.TransactionSupport;
 import javax.resource.spi.endpoint.MessageEndpoint;
 import javax.resource.spi.endpoint.MessageEndpointFactory;
 
-import javax.security.sasl.SaslException;
 import javax.transaction.xa.XAResource;
 
 @Connector(
@@ -64,7 +76,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
     private static Logger log = Logger.getLogger(XMPPResourceAdapter.class.getName());
 
-    private ConcurrentHashMap<XMPPActivationSpec, XMPPActivation> activations;
+    final Map<XMPPActivationSpec, EndpointTarget> targets = new ConcurrentHashMap<XMPPActivationSpec, EndpointTarget>();
 
     @ConfigProperty(defaultValue = "localhost")
     private String host;
@@ -84,10 +96,6 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
     private XMPPTCPConnection connection;
     private ChatManager chatmanager;
     private boolean connected = false;
-
-    public XMPPResourceAdapter() {
-        this.activations = new ConcurrentHashMap<XMPPActivationSpec, XMPPActivation>();
-    }
 
     public void setHost(String host) {
         this.host = host;
@@ -130,23 +138,28 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
         this.serviceName = serviceName;
     }
 
-    public void endpointActivation(MessageEndpointFactory endpointFactory,
-                                   ActivationSpec spec) throws ResourceException {
-        XMPPActivation activation = new XMPPActivation(this, endpointFactory, (XMPPActivationSpec) spec);
-        activations.put((XMPPActivationSpec) spec, activation);
-        activation.start();
+    public void endpointActivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec)
+            throws ResourceException {
+        final XMPPActivationSpec xmppActivationSpec = (XMPPActivationSpec) activationSpec;
+        final MessageEndpoint messageEndpoint = messageEndpointFactory.createEndpoint(null);
 
-        log.finest("endpointActivation()");
+        final Class<?> endpointClass = xmppActivationSpec.getBeanClass() != null ? xmppActivationSpec
+                .getBeanClass() : messageEndpointFactory.getEndpointClass();
+
+        final EndpointTarget target = new EndpointTarget(messageEndpoint, endpointClass);
+        targets.put(xmppActivationSpec, target);
+
     }
 
-    public void endpointDeactivation(MessageEndpointFactory endpointFactory,
-                                     ActivationSpec spec) {
-        XMPPActivation activation = activations.remove(spec);
-        if (activation != null) {
-            activation.stop();
+    public void endpointDeactivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec) {
+        final XMPPActivationSpec xmppActivationSpec = (XMPPActivationSpec) activationSpec;
+
+        final EndpointTarget endpointTarget = targets.get(xmppActivationSpec);
+        if (endpointTarget == null) {
+            throw new IllegalStateException("No EndpointTarget to undeploy for ActivationSpec " + activationSpec);
         }
 
-        log.finest("endpointDeactivation()");
+        endpointTarget.messageEndpoint.release();
     }
 
     public void start(BootstrapContext ctx)
@@ -167,11 +180,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
         try {
             connection.connect();
             log.finest("Connected to " + host + ":" + port + "/" + serviceName);
-        } catch (XMPPException e) {
-            log.log(Level.SEVERE, "Unable to connect to " + host + ":" + port + "/" + serviceName, e);
-        } catch (SmackException e) {
-            log.log(Level.SEVERE, "Unable to connect to " + host + ":" + port + "/" + serviceName, e);
-        } catch (IOException e) {
+        } catch (XMPPException | SmackException | IOException e) {
             log.log(Level.SEVERE, "Unable to connect to " + host + ":" + port + "/" + serviceName, e);
         }
 
@@ -182,15 +191,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
             Presence presence = new Presence(Presence.Type.available);
             connection.sendPacket(presence);
 
-        } catch (XMPPException e) {
-            log.log(Level.SEVERE, "Unable to login as " + username, e);
-        } catch (SmackException.NotConnectedException e) {
-            log.log(Level.SEVERE, "Unable to login as " + username, e);
-        } catch (SaslException e) {
-            log.log(Level.SEVERE, "Unable to login as " + username, e);
-        } catch (SmackException e) {
-            log.log(Level.SEVERE, "Unable to login as " + username, e);
-        } catch (IOException e) {
+        } catch (XMPPException | SmackException | IOException e) {
             log.log(Level.SEVERE, "Unable to login as " + username, e);
         }
 
@@ -220,14 +221,10 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
         try {
             newChat.sendMessage(message);
-        } catch (XMPPException e) {
-            throw new MessageException(e);
-        } catch (SmackException.NotConnectedException e) {
+        } catch (XMPPException | SmackException.NotConnectedException e) {
             throw new MessageException(e);
         }
     }
-
-
 
     public XAResource[] getXAResources(ActivationSpec[] specs)
             throws ResourceException {
@@ -236,71 +233,176 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
     }
 
     @Override
-    public int hashCode() {
-        int result = 17;
-        if (host != null) {
-            result += 31 * result + 7 * host.hashCode();
-        } else {
-            result += 31 * result + 7;
-        }
-        if (port != null) {
-            result += 31 * result + 7 * port.hashCode();
-        } else {
-            result += 31 * result + 7;
-        }
-        return result;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        if (other == null) {
-            return false;
-        }
-        if (other == this) {
-            return true;
-        }
-        if (!(other instanceof XMPPResourceAdapter)) {
-            return false;
-        }
-        boolean result = true;
-        XMPPResourceAdapter obj = (XMPPResourceAdapter) other;
-        if (result) {
-            if (host == null) {
-                result = obj.getHost() == null;
-            } else {
-                result = host.equals(obj.getHost());
-            }
-        }
-        if (result) {
-            if (port == null) {
-                result = obj.getPort() == null;
-            } else {
-                result = port.equals(obj.getPort());
-            }
-        }
-        return result;
-    }
-
-    @Override
     public void processMessage(Chat chat, Message message) {
 
-        for (XMPPActivation next : activations.values()) {
-            try {
-                final MessageEndpoint endpoint = next.getMessageEndpointFactory().createEndpoint(null);
-
-                final Method onMessage = XMPPMessageListener.class.getDeclaredMethod("onMessage", String.class, String.class);
-                endpoint.beforeDelivery(onMessage);
-                ((XMPPMessageListener) endpoint).onMessage(chat.getParticipant(), message.getBody());
-                endpoint.afterDelivery();
-            } catch (NoSuchMethodException e) {
-                log.log(Level.SEVERE, "Unable to call MDB endpoint for message", e);
-            } catch (ResourceException e) {
-                log.log(Level.SEVERE, "Unable to call MDB endpoint for message", e);
-            }
+        for (EndpointTarget endpointTarget : targets.values()) {
+            endpointTarget.invoke(chat, message);
         }
 
         chat.removeMessageListener(this);
         chat.close();
+    }
+
+    public static class EndpointTarget {
+        private final MessageEndpoint messageEndpoint;
+        private final Class<?> clazz;
+
+        public EndpointTarget(final MessageEndpoint messageEndpoint, final Class<?> clazz) {
+            this.messageEndpoint = messageEndpoint;
+            this.clazz = clazz;
+        }
+
+        public void invoke(Chat chat, Message message) {
+
+            // find matching method(s)
+
+            final List<Method> matchingMethods =
+                    Arrays.asList(clazz.getDeclaredMethods())
+                            .stream()
+                            .sorted((m1, m2) -> m1.toString().compareTo(m2.toString()))
+                            .filter(this::isPublic)
+                            .filter(this::isNotFinal)
+                            .filter(this::isNotAbstract)
+                            .filter(m -> filterSender(chat.getParticipant(), m))
+                            .filter(m -> filterMessage(message.getBody(), m))
+                            .collect(Collectors.toList());
+
+            if (matchingMethods == null || matchingMethods.size() == 0) {
+                // log this
+                return;
+            }
+
+            if (this.clazz.isAnnotationPresent(InvokeAllMatches.class)) {
+                for (final Method method : matchingMethods) {
+                    invoke(method, chat.getParticipant(), message.getBody());
+                }
+            } else {
+                invoke(matchingMethods.get(0), chat.getParticipant(), message.getBody());
+            }
+        }
+
+        private boolean filterMessage(final String message, final Method m) {
+            return ! m.isAnnotationPresent(MessageText.class) || "".equals(m.getAnnotation(MessageText.class).value())
+                    || templateMatches(m.getAnnotation(MessageText.class).value(), message);
+        }
+
+        private boolean filterSender(final String sender, final Method m) {
+            return !m.isAnnotationPresent(Sender.class) || "".equals(m.getAnnotation(Sender.class).value())
+                    || templateMatches(m.getAnnotation(Sender.class).value(), sender);
+        }
+
+        private boolean templateMatches(final String pattern, final String input) {
+            final Template template = new Template(pattern);
+            final Map<String, List<String>> values = new HashMap<>();
+            return template.match(input, values);
+        }
+
+        private boolean isPublic(final Method m) {
+            return Modifier.isPublic(m.getModifiers());
+        }
+
+        private boolean isNotAbstract(final Method m) {
+            return !Modifier.isAbstract(m.getModifiers());
+        }
+
+        private boolean isNotFinal(final Method m) {
+            return !Modifier.isFinal(m.getModifiers());
+        }
+
+        private void invoke(final Method method, final String sender, final String message) {
+            try {
+                try {
+                    messageEndpoint.beforeDelivery(method);
+                    final Object[] values = getValues(method, sender, message);
+                    method.invoke(messageEndpoint, values);
+                } finally {
+                    messageEndpoint.afterDelivery();
+                }
+            } catch (final NoSuchMethodException | ResourceException | IllegalAccessException | InvocationTargetException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static Object[] getValues(final Method method, final String sender, final String message) {
+
+        if (method == null) {
+            return null;
+        }
+
+        final Parameter[] parameters = method.getParameters();
+        if (parameters.length == 0) {
+            return new Object[0];
+        }
+
+        final Template senderTemplate = getTemplate(method.getAnnotation(Sender.class));
+        final Map<String, List<String>> senderParamValues = new HashMap<>();
+        if (senderTemplate != null) {
+            senderTemplate.match(sender, senderParamValues);
+        }
+
+        final Template messageTextTemplate = getTemplate(method.getAnnotation(MessageText.class));
+        final Map<String, List<String>> messageTextParamValues = new HashMap<>();
+        if (messageTextTemplate != null) {
+            messageTextTemplate.match(message, messageTextParamValues);
+        }
+
+        final Object[] values = new Object[parameters.length];
+
+        for (int i = 0; i < parameters.length; i++) {
+            final Parameter parameter = parameters[i];
+
+            values[i] = null;
+
+            if (parameter.isAnnotationPresent(SenderParam.class)) {
+                final SenderParam senderParam = parameter.getAnnotation(SenderParam.class);
+                if (senderParam.value() == null || senderParam.value().length() == 0) {
+                    values[i] = Converter.convert(sender, parameter.getType(), null);
+                } else {
+                    final List<String> paramValues = senderParamValues.get(senderParam.value());
+                    final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);
+                    values[i] = Converter.convert(paramValue, parameter.getType(), null);
+                }
+            }
+
+            if (parameter.isAnnotationPresent(MessageTextParam.class)) {
+                final MessageTextParam messageTextParam = parameter.getAnnotation(MessageTextParam.class);
+                if (messageTextParam.value() == null || messageTextParam.value().length() == 0) {
+                    values[i] = Converter.convert(message, parameter.getType(), null);
+                } else {
+                    final List<String> paramValues = messageTextParamValues.get(messageTextParam.value());
+                    final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);
+                    values[i] = Converter.convert(paramValue, parameter.getType(), null);
+                }
+            }
+        }
+
+        return values;
+    }
+
+    private static Template getTemplate(final Annotation annotation) {
+        if (annotation == null) {
+            return null;
+        }
+
+        try {
+
+            final Method patternMethod = annotation.getClass().getMethod("value");
+            if (patternMethod == null) {
+                return null;
+            }
+
+            if (!String.class.equals(patternMethod.getReturnType())) {
+                return null;
+            }
+
+            final String pattern = (String) patternMethod.invoke(annotation);
+            return new Template(pattern);
+        } catch (final Exception e) {
+            // ignore
+        }
+
+        return null;
     }
 
     @Override

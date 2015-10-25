@@ -46,7 +46,7 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.openejb</groupId>
+      <groupId>javax</groupId>
       <artifactId>javaee-api</artifactId>
       <scope>provided</scope>
     </dependency>
@@ -65,45 +65,8 @@
       <artifactId>smack-tcp</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>arquillian-tomee-remote</artifactId>
-      <version>${version.tomee}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>apache-tomee</artifactId>
-      <version>${version.tomee}</version>
-      <classifier>plus</classifier>
-      <type>zip</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>tomee-jaxrs</artifactId>
-      <version>${version.tomee}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.arquillian.junit</groupId>
-      <artifactId>arquillian-junit-container</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.jboss.shrinkwrap.resolver</groupId>
-      <artifactId>shrinkwrap-resolver-depchain</artifactId>
-      <type>pom</type>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.openejb</groupId>
-      <artifactId>ziplock</artifactId>
-      <version>${version.tomee}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.vysper</groupId>
-      <artifactId>vysper-core</artifactId>
+      <groupId>org.tomitribe</groupId>
+      <artifactId>tomitribe-util</artifactId>
     </dependency>
   </dependencies>
 

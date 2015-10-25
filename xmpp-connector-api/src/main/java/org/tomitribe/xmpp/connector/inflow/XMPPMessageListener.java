@@ -19,5 +19,4 @@
 package org.tomitribe.xmpp.connector.inflow;
 
 public interface XMPPMessageListener {
-    public void onMessage(String recipient, String msg);
 }

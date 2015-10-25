@@ -51,10 +51,6 @@
     <version.crest>0.3</version.crest>
     <maven.checkstyle.plugin.version>2.16</maven.checkstyle.plugin.version>
     <smack-core.version>4.0.6</smack-core.version>
-    <version.vysper>0.7</version.vysper>
-    <version.shrinkwrap.resolver>2.2.0</version.shrinkwrap.resolver>
-    <arquillian-bom.version>1.1.2.Final</arquillian-bom.version>
-	  <version.shrinkwrap.descriptor>2.0.0-alpha-8</version.shrinkwrap.descriptor>
   </properties>
 
   <repositories>
@@ -81,15 +77,10 @@
         <scope>test</scope>
       </dependency>
       <dependency>
-        <groupId>org.apache.openejb</groupId>
+        <groupId>javax</groupId>
         <artifactId>javaee-api</artifactId>
-        <version>6.0-6</version>
+        <version>7.0</version>
         <scope>provided</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.vysper</groupId>
-        <artifactId>vysper-core</artifactId>
-        <version>${version.vysper}</version>
       </dependency>
       <dependency>
         <groupId>org.igniterealtime.smack</groupId>
@@ -101,29 +92,33 @@
         <artifactId>smack-tcp</artifactId>
         <version>${smack-core.version}</version>
       </dependency>
-      <!-- Override dependency resolver with test version. This must go *BEFORE*
-      the Arquillian BOM. -->
       <dependency>
-        <groupId>org.jboss.shrinkwrap.resolver</groupId>
-        <artifactId>shrinkwrap-resolver-bom</artifactId>
-        <version>${version.shrinkwrap.resolver}</version>
-        <scope>import</scope>
-        <type>pom</type>
-      </dependency>
-      <!-- Now pull in our server-based unit testing framework -->
-      <dependency>
-        <groupId>org.jboss.arquillian</groupId>
-        <artifactId>arquillian-bom</artifactId>
-        <version>${arquillian-bom.version}</version>
-        <scope>import</scope>
-        <type>pom</type>
+        <groupId>org.tomitribe</groupId>
+        <artifactId>tomitribe-util</artifactId>
+        <version>1.2.1</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <optimize>true</optimize>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
   <modules>
     <module>xmpp-connector-api</module>
     <module>xmpp-connector-impl</module>
     <module>xmpp-connector-rar</module>
+    <module>xmpp-connector-sample-war</module>
   </modules>
 
 </project>

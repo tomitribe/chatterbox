@@ -32,8 +32,14 @@ public class XMPPActivationSpec implements ActivationSpec {
 
     private ResourceAdapter ra;
 
-    public XMPPActivationSpec() {
+    private Class beanClass;
 
+    public Class getBeanClass() {
+        return beanClass;
+    }
+
+    public void setBeanClass(final Class beanClass) {
+        this.beanClass = beanClass;
     }
 
     public void validate() throws InvalidPropertyException {

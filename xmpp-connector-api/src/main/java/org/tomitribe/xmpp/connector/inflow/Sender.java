@@ -16,22 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+package org.tomitribe.xmpp.connector.inflow;
 
-package org.tomitribe.xmpp.connector.test;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import org.tomitribe.xmpp.connector.inflow.XMPPMessageListener;
-
-import javax.ejb.EJB;
-import javax.ejb.MessageDriven;
-
-@MessageDriven(name = "Test")
-public class TestXMPPMDB implements XMPPMessageListener {
-
-    @EJB
-    private Messages messages;
-
-    @Override
-    public void onMessage(final String recipient, final String msg) {
-        messages.addMessage(recipient + " => " + msg);
-    }
+@Inherited
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Sender {
+    String value() default "";
 }
