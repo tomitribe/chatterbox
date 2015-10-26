@@ -144,7 +144,7 @@ The following annotations are available:
 | @MessageText
 | @MessageTextParam
 | Matches the text of the message. Where a value is specified, on the +@MessageTextParam+ annotation, the value of the parameter will be the portion of the message matching the regex group
-|====
+|===
 
 This connector has the following configuration options:
 
