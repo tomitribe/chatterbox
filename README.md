@@ -1,2 +1,0 @@
-# chatterbox
-Example connectors
