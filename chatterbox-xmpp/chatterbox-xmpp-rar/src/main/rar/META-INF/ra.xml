@@ -52,9 +52,9 @@
         <outbound-resourceadapter>
             <connection-definition>
                 <managedconnectionfactory-class>org.tomitribe.chatterbox.xmpp.impl.XMPPManagedConnectionFactory</managedconnectionfactory-class>
-                <connectionfactory-interface>XMPPConnectionFactory</connectionfactory-interface>
+                <connectionfactory-interface>org.tomitribe.chatterbox.xmpp.api.XMPPConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.tomitribe.chatterbox.xmpp.impl.XMPPConnectionFactoryImpl</connectionfactory-impl-class>
-                <connection-interface>XMPPConnection</connection-interface>
+                <connection-interface>org.tomitribe.chatterbox.xmpp.api.XMPPConnection</connection-interface>
                 <connection-impl-class>org.tomitribe.chatterbox.xmpp.impl.XMPPConnectionImpl</connection-impl-class>
             </connection-definition>
             <transaction-support>NoTransaction</transaction-support>
