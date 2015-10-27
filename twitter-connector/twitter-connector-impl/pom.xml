@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.tomitribe</groupId>
         <artifactId>twitter-connector-parent</artifactId>
-        <version>0.2-SNAPSHOT</version>
+        <version>0.1</version>
     </parent>
 
     <artifactId>twitter-connector-impl</artifactId>
