@@ -6,9 +6,9 @@ A collection of sample JCA connectors.
 
 The following connectors are available:
 
-- IMAP Connector
-- Twitter Connector
-- XMPP Connector
+- IMAP
+- Twitter
+- XMPP
 
 These connectors demonstrate inbound and outbound connectivity, using strongly typed method parameters and an API based
 on JAX-RS +@Path+ / +@PathParam+ annotations.
