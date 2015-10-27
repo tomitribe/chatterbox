@@ -16,12 +16,12 @@
  */
 package org.superbiz;
 
-import org.tomitribe.twitter.api.InvokeAllMatches;
-import org.tomitribe.twitter.api.Tweet;
-import org.tomitribe.twitter.api.TweetParam;
-import org.tomitribe.twitter.api.TwitterUpdates;
-import org.tomitribe.twitter.api.User;
-import org.tomitribe.twitter.api.UserParam;
+import org.tomitribe.chatterbox.twitter.api.InvokeAllMatches;
+import org.tomitribe.chatterbox.twitter.api.Tweet;
+import org.tomitribe.chatterbox.twitter.api.TweetParam;
+import org.tomitribe.chatterbox.twitter.api.TwitterUpdates;
+import org.tomitribe.chatterbox.twitter.api.User;
+import org.tomitribe.chatterbox.twitter.api.UserParam;
 
 import javax.ejb.MessageDriven;
 import java.util.logging.Logger;

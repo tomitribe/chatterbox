@@ -18,12 +18,12 @@
  */
 package org.superbiz;
 
-import org.tomitribe.xmpp.connector.XMPPConnection;
-import org.tomitribe.xmpp.connector.XMPPConnectionFactory;
-import org.tomitribe.xmpp.connector.inflow.MessageText;
-import org.tomitribe.xmpp.connector.inflow.MessageTextParam;
-import org.tomitribe.xmpp.connector.inflow.SenderParam;
-import org.tomitribe.xmpp.connector.inflow.XMPPMessageListener;
+import org.tomitribe.chatterbox.xmpp.api.XMPPConnection;
+import org.tomitribe.chatterbox.xmpp.api.XMPPConnectionFactory;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.MessageText;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.MessageTextParam;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.SenderParam;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPMessageListener;
 
 import javax.annotation.Resource;
 import javax.ejb.MessageDriven;

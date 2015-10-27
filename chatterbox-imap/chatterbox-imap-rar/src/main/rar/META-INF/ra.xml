@@ -27,7 +27,7 @@
         <license-required>false</license-required>
     </license>
     <resourceadapter>
-        <resourceadapter-class>org.tomitribe.imap.adapter.ImapResourceAdapter</resourceadapter-class>
+        <resourceadapter-class>org.tomitribe.chatterbox.imap.adapter.ImapResourceAdapter</resourceadapter-class>
         <outbound-resourceadapter>
             <transaction-support>NoTransaction</transaction-support>
             <reauthentication-support>false</reauthentication-support>
@@ -35,13 +35,9 @@
         <inbound-resourceadapter>
             <messageadapter>
                 <messagelistener>
-                    <messagelistener-type>org.tomitribe.imap.api.MailListener</messagelistener-type>
+                    <messagelistener-type>org.tomitribe.chatterbox.imap.api.MailListener</messagelistener-type>
                     <activationspec>
-                        <activationspec-class>org.tomitribe.imap.adapter.ImapActivationSpec</activationspec-class>
-                        <config-property>
-                            <config-property-name>folder</config-property-name>
-                            <config-property-type>java.lang.String</config-property-type>
-                        </config-property>
+                        <activationspec-class>org.tomitribe.chatterbox.imap.adapter.ImapActivationSpec</activationspec-class>
                     </activationspec>
                 </messagelistener>
             </messageadapter>

@@ -27,7 +27,7 @@
         <license-required>false</license-required>
     </license>
     <resourceadapter>
-        <resourceadapter-class>org.tomitribe.twitter.adapter.TwitterResourceAdapter</resourceadapter-class>
+        <resourceadapter-class>org.tomitribe.chatterbox.twitter.adapter.TwitterResourceAdapter</resourceadapter-class>
         <config-property>
             <config-property-name>consumerKey</config-property-name>
             <config-property-type>String</config-property-type>
@@ -55,9 +55,9 @@
         <inbound-resourceadapter>
             <messageadapter>
                 <messagelistener>
-                    <messagelistener-type>org.tomitribe.twitter.api.TwitterUpdates</messagelistener-type>
+                    <messagelistener-type>org.tomitribe.chatterbox.twitter.api.TwitterUpdates</messagelistener-type>
                     <activationspec>
-                        <activationspec-class>org.tomitribe.twitter.adapter.TwitterActivationSpec</activationspec-class>
+                        <activationspec-class>org.tomitribe.chatterbox.twitter.adapter.TwitterActivationSpec</activationspec-class>
                     </activationspec>
                 </messagelistener>
             </messageadapter>
