@@ -26,7 +26,7 @@
     <parent>
         <groupId>org.tomitribe</groupId>
         <artifactId>chatterbox-twitter-parent</artifactId>
-        <version>0.1</version>
+        <version>0.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>chatterbox-twitter-api</artifactId>
