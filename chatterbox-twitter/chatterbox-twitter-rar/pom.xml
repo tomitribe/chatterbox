@@ -26,48 +26,19 @@
 
     <parent>
         <groupId>org.tomitribe</groupId>
-        <artifactId>twitter-connector-parent</artifactId>
+        <artifactId>chatterbox-twitter-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>twitter-connector-impl</artifactId>
-    <packaging>jar</packaging>
-    <name>Twitter Connector :: Resource Adapter Implementation</name>
+    <artifactId>chatterbox-twitter-rar</artifactId>
+    <packaging>rar</packaging>
+    <name>Chatterbox :: Twitter :: Resource Adapter</name>
 
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>javax</groupId>
-            <artifactId>javaee-api</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>org.tomitribe</groupId>
-            <artifactId>twitter-connector-api</artifactId>
+            <artifactId>chatterbox-twitter-impl</artifactId>
             <version>${project.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.openejb</groupId>
-            <artifactId>openejb-core</artifactId>
-            <version>${version.openejb}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.twitter</groupId>
-            <artifactId>hbc-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.twitter</groupId>
-            <artifactId>hbc-twitter4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.tomitribe</groupId>
-            <artifactId>tomitribe-util</artifactId>
         </dependency>
     </dependencies>
 </project>

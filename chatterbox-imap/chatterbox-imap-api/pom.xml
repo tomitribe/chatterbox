@@ -25,13 +25,13 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>imap-connector-parent</artifactId>
+    <artifactId>chatterbox-imap-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>imap-connector-api</artifactId>
+  <artifactId>chatterbox-imap-api</artifactId>
   <packaging>jar</packaging>
-  <name>IMAP Connector :: API</name>
+  <name>Chatterbox :: IMAP :: API</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

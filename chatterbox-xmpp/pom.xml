@@ -31,10 +31,10 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>xmpp-connector-parent</artifactId>
+  <artifactId>chatterbox-xmpp-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
-  <name>XMPP Connector</name>
+  <name>Chatterbox :: XMPP</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -108,10 +108,10 @@
   </build>
 
   <modules>
-    <module>xmpp-connector-api</module>
-    <module>xmpp-connector-impl</module>
-    <module>xmpp-connector-rar</module>
-    <module>xmpp-connector-sample-war</module>
+    <module>chatterbox-xmpp-api</module>
+    <module>chatterbox-xmpp-impl</module>
+    <module>chatterbox-xmpp-rar</module>
+    <module>chatterbox-xmpp-sample-war</module>
   </modules>
 
 </project>

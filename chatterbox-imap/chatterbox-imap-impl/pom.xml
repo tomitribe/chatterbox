@@ -25,19 +25,33 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>imap-connector-parent</artifactId>
+    <artifactId>chatterbox-imap-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>imap-connector-rar</artifactId>
-  <packaging>rar</packaging>
-  <name>IMAP Connector :: Resource Adapter</name>
+  <artifactId>chatterbox-imap-impl</artifactId>
+  <packaging>jar</packaging>
+  <name>Chatterbox :: IMAP :: Resource Adapter Implementation</name>
 
   <dependencies>
     <dependency>
       <groupId>org.tomitribe</groupId>
-      <artifactId>imap-connector-impl</artifactId>
+      <artifactId>tomitribe-util</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax</groupId>
+      <artifactId>javaee-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.tomitribe</groupId>
+      <artifactId>chatterbox-imap-api</artifactId>
       <version>${project.version}</version>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 </project>

@@ -25,18 +25,18 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>xmpp-connector-parent</artifactId>
+    <artifactId>chatterbox-xmpp-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>xmpp-connector-impl</artifactId>
+  <artifactId>chatterbox-xmpp-impl</artifactId>
   <packaging>jar</packaging>
-  <name>XMPP Connector :: Resource Adapter Implementation</name>
+  <name>Chatterbox :: XMPP :: Resource Adapter Implementation</name>
 
   <dependencies>
     <dependency>
       <groupId>org.tomitribe</groupId>
-      <artifactId>xmpp-connector-api</artifactId>
+      <artifactId>chatterbox-xmpp-api</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>

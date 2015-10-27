@@ -23,10 +23,10 @@
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>imap-connector-parent</artifactId>
+  <artifactId>chatterbox-imap-parent</artifactId>
   <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
-  <name>IMAP Connector</name>
+  <name>Chatterbox :: IMAP</name>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -60,10 +60,10 @@
     </dependencies>
   </dependencyManagement>
   <modules>
-    <module>imap-connector-api</module>
-    <module>imap-connector-impl</module>
-    <module>imap-connector-rar</module>
-    <module>imap-connector-sample-war</module>
+    <module>chatterbox-imap-api</module>
+    <module>chatterbox-imap-impl</module>
+    <module>chatterbox-imap-rar</module>
+    <module>chatterbox-imap-sample-war</module>
   </modules>
   <build>
     <defaultGoal>install</defaultGoal>

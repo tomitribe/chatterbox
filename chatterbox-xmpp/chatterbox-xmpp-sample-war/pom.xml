@@ -26,24 +26,24 @@
 
     <parent>
         <groupId>org.tomitribe</groupId>
-        <artifactId>xmpp-connector-parent</artifactId>
+        <artifactId>chatterbox-xmpp-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>xmpp-connector-sample-war</artifactId>
+    <artifactId>chatterbox-xmpp-sample-war</artifactId>
     <packaging>war</packaging>
-    <name>XMPP Connector :: Sample WAR</name>
+    <name>Chatterbox :: XMPP :: Sample WAR</name>
 
     <dependencies>
         <dependency>
             <groupId>org.tomitribe</groupId>
-            <artifactId>xmpp-connector-api</artifactId>
+            <artifactId>chatterbox-xmpp-api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.tomitribe</groupId>
-            <artifactId>xmpp-connector-impl</artifactId>
+            <artifactId>chatterbox-xmpp-impl</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -85,10 +85,10 @@
                     <tomeeVersion>${version.tomee}</tomeeVersion>
                     <tomeeClassifier>plus</tomeeClassifier>
                     <libs>
-                        <lib>org.tomitribe:xmpp-connector-api:${project.version}:jar</lib>
+                        <lib>org.tomitribe:chatterbox-xmpp-api:${project.version}:jar</lib>
                     </libs>
                     <apps>
-                        <app>org.tomitribe:xmpp-connector-rar:${project.version}:rar</app>
+                        <app>org.tomitribe:chatterbox-xmpp-rar:${project.version}:rar</app>
                     </apps>
                 </configuration>
             </plugin>

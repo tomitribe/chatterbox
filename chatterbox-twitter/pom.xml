@@ -24,10 +24,10 @@
 	    <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>twitter-connector-parent</artifactId>
+    <artifactId>chatterbox-twitter-parent</artifactId>
     <packaging>pom</packaging>
     <version>0.1-SNAPSHOT</version>
-    <name>Twitter Connector</name>
+    <name>Chatterbox :: Twitter</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -71,10 +71,10 @@
         </dependencies>
     </dependencyManagement>
     <modules>
-        <module>twitter-connector-api</module>
-        <module>twitter-connector-impl</module>
-        <module>twitter-connector-rar</module>
-        <module>twitter-connector-sample-war</module>
+        <module>chatterbox-twitter-api</module>
+        <module>chatterbox-twitter-impl</module>
+        <module>chatterbox-twitter-rar</module>
+        <module>chatterbox-twitter-sample-war</module>
     </modules>
     <build>
         <defaultGoal>install</defaultGoal>

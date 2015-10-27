@@ -26,24 +26,24 @@
 
     <parent>
         <groupId>org.tomitribe</groupId>
-        <artifactId>twitter-connector-parent</artifactId>
+        <artifactId>chatterbox-twitter-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>twitter-connector-sample-war</artifactId>
+    <artifactId>chatterbox-twitter-sample-war</artifactId>
     <packaging>war</packaging>
-    <name>Twitter Connector :: Sample WAR</name>
+    <name>Chatterbox :: Twitter :: Sample WAR</name>
 
     <dependencies>
         <dependency>
             <groupId>org.tomitribe</groupId>
-            <artifactId>twitter-connector-api</artifactId>
+            <artifactId>chatterbox-twitter-api</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.tomitribe</groupId>
-            <artifactId>twitter-connector-impl</artifactId>
+            <artifactId>chatterbox-twitter-impl</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -85,10 +85,10 @@
                     <tomeeVersion>${version.tomee}</tomeeVersion>
                     <tomeeClassifier>plus</tomeeClassifier>
                     <libs>
-                        <lib>org.tomitribe:twitter-connector-api:${project.version}:jar</lib>
+                        <lib>org.tomitribe:chatterbox-twitter-api:${project.version}:jar</lib>
                     </libs>
                     <apps>
-                        <app>org.tomitribe:twitter-connector-rar:${project.version}:rar</app>
+                        <app>org.tomitribe:chatterbox-twitter-rar:${project.version}:rar</app>
                     </apps>
                 </configuration>
             </plugin>

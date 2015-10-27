@@ -25,7 +25,7 @@
   <artifactId>chatterbox-parent</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>Chatterbox Connectors</name>
+  <name>Chatterbox</name>
 
   <scm>
     <connection>scm:git:git@github.com:tomitribe/chatterbox.git</connection>
@@ -60,9 +60,9 @@
   </repositories>
 
   <modules>
-    <module>imap-connector</module>
-    <module>twitter-connector</module>
-    <module>xmpp-connector</module>
+    <module>chatterbox-imap</module>
+    <module>chatterbox-twitter</module>
+    <module>chatterbox-xmpp</module>
   </modules>
 
 </project>

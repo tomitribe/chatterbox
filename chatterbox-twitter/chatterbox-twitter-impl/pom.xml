@@ -26,26 +26,48 @@
 
     <parent>
         <groupId>org.tomitribe</groupId>
-        <artifactId>twitter-connector-parent</artifactId>
+        <artifactId>chatterbox-twitter-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>twitter-connector-api</artifactId>
+    <artifactId>chatterbox-twitter-impl</artifactId>
     <packaging>jar</packaging>
-    <name>Twitter Connector :: API</name>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.arquillian>1.1.1.Final</version.arquillian>
-        <version.shrinkwrap.descriptor>2.0.0-alpha-5</version.shrinkwrap.descriptor>
-        <version.shrinkwrap.shrinkwrap>1.0.1</version.shrinkwrap.shrinkwrap>
-    </properties>
+    <name>Chatterbox :: Twitter :: Resource Adapter Implementation</name>
 
     <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>javax</groupId>
             <artifactId>javaee-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.tomitribe</groupId>
+            <artifactId>chatterbox-twitter-api</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.openejb</groupId>
+            <artifactId>openejb-core</artifactId>
+            <version>${version.openejb}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.twitter</groupId>
+            <artifactId>hbc-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.twitter</groupId>
+            <artifactId>hbc-twitter4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tomitribe</groupId>
+            <artifactId>tomitribe-util</artifactId>
         </dependency>
     </dependencies>
 </project>

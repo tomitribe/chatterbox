@@ -25,26 +25,19 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>xmpp-connector-parent</artifactId>
+    <artifactId>chatterbox-xmpp-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>xmpp-connector-api</artifactId>
-  <packaging>jar</packaging>
-  <name>XMPP Connector :: API</name>
-
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <version.arquillian>1.1.1.Final</version.arquillian>
-    <version.shrinkwrap.descriptor>2.0.0-alpha-5</version.shrinkwrap.descriptor>
-    <version.shrinkwrap.shrinkwrap>1.0.1</version.shrinkwrap.shrinkwrap>
-  </properties>
+  <artifactId>chatterbox-xmpp-rar</artifactId>
+  <packaging>rar</packaging>
+  <name>Chatterbox :: XMPP :: Resource Adapter</name>
 
   <dependencies>
-      <dependency>
-        <groupId>javax</groupId>
-        <artifactId>javaee-api</artifactId>
-        <scope>provided</scope>
-      </dependency>
+    <dependency>
+      <groupId>org.tomitribe</groupId>
+      <artifactId>chatterbox-xmpp-impl</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

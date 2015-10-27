@@ -26,19 +26,26 @@
 
     <parent>
         <groupId>org.tomitribe</groupId>
-        <artifactId>twitter-connector-parent</artifactId>
+        <artifactId>chatterbox-twitter-parent</artifactId>
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>twitter-connector-rar</artifactId>
-    <packaging>rar</packaging>
-    <name>Twitter Connector :: Resource Adapter</name>
+    <artifactId>chatterbox-twitter-api</artifactId>
+    <packaging>jar</packaging>
+    <name>Chatterbox :: Twitter :: API</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <version.arquillian>1.1.1.Final</version.arquillian>
+        <version.shrinkwrap.descriptor>2.0.0-alpha-5</version.shrinkwrap.descriptor>
+        <version.shrinkwrap.shrinkwrap>1.0.1</version.shrinkwrap.shrinkwrap>
+    </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.tomitribe</groupId>
-            <artifactId>twitter-connector-impl</artifactId>
-            <version>${project.version}</version>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

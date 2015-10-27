@@ -25,18 +25,18 @@
 
   <parent>
     <groupId>org.tomitribe</groupId>
-    <artifactId>imap-connector-parent</artifactId>
+    <artifactId>chatterbox-imap-parent</artifactId>
     <version>0.1-SNAPSHOT</version>
   </parent>
 
-  <artifactId>imap-connector-sample-war</artifactId>
+  <artifactId>chatterbox-imap-sample-war</artifactId>
   <packaging>war</packaging>
-  <name>IMAP Connector :: Sample</name>
+  <name>Chatterbox :: IMAP :: Sample</name>
 
   <dependencies>
     <dependency>
       <groupId>org.tomitribe</groupId>
-      <artifactId>imap-connector-api</artifactId>
+      <artifactId>chatterbox-imap-api</artifactId>
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
@@ -119,11 +119,11 @@
           <context>ROOT</context>
           <libs>
             <lib>remove:geronimo-javamail_1.4_mail</lib>
-            <lib>org.tomitribe:imap-connector-api:${project.version}</lib>
+            <lib>org.tomitribe:chatterbox-imap-api:${project.version}</lib>
             <lib>org.apache.geronimo.javamail:geronimo-javamail_1.4_mail:1.9.0-alpha-2</lib>
           </libs>
           <apps>
-            <app>org.tomitribe:imap-connector-rar:${project.version}:rar</app>
+            <app>org.tomitribe:chatterbox-imap-rar:${project.version}:rar</app>
           </apps>
         </configuration>
       </plugin>
