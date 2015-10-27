@@ -18,6 +18,8 @@
  */
 package org.tomitribe.chatterbox.xmpp.impl.inflow;
 
+import org.tomitribe.chatterbox.xmpp.api.inflow.XMPPMessageListener;
+
 import java.util.logging.Logger;
 
 import javax.resource.spi.Activation;

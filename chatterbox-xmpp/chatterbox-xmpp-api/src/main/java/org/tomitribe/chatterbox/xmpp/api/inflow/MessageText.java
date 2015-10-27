@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.tomitribe.chatterbox.xmpp.impl.inflow;
+package org.tomitribe.chatterbox.xmpp.api.inflow;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -27,6 +27,6 @@ import java.lang.annotation.Target;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface Sender {
+public @interface MessageText {
     String value() default "";
 }

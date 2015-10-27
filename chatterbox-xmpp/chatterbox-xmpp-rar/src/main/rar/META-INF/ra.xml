@@ -55,7 +55,7 @@
                 <connectionfactory-interface>org.tomitribe.chatterbox.xmpp.api.XMPPConnectionFactory</connectionfactory-interface>
                 <connectionfactory-impl-class>org.tomitribe.chatterbox.xmpp.impl.XMPPConnectionFactoryImpl</connectionfactory-impl-class>
                 <connection-interface>org.tomitribe.chatterbox.xmpp.api.XMPPConnection</connection-interface>
-                <connection-impl-class>org.tomitribe.chatterbox.xmpp.impl.XMPPConnectionImpl</connection-impl-class>
+                <connection-impl-class>org.tomitribe.chatterbox.xmpp.api.inflow.XMPPMessageListener</connection-impl-class>
             </connection-definition>
             <transaction-support>NoTransaction</transaction-support>
             <reauthentication-support>false</reauthentication-support>
@@ -63,7 +63,7 @@
         <inbound-resourceadapter>
             <messageadapter>
                 <messagelistener>
-                    <messagelistener-type>XMPPMessageListener</messagelistener-type>
+                    <messagelistener-type>org.tomitribe.chatterbox.xmpp.api.inflow.XMPPMessageListener</messagelistener-type>
                     <activationspec>
                         <activationspec-class>org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPActivationSpec</activationspec-class>
                     </activationspec>

@@ -16,9 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.tomitribe.chatterbox.xmpp.impl.inflow;
+package org.tomitribe.chatterbox.xmpp.impl;
 
-import org.tomitribe.chatterbox.xmpp.impl.XMPPResourceAdapter;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPActivationSpec;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpointFactory;

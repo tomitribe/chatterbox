@@ -19,13 +19,13 @@
 package org.tomitribe.chatterbox.xmpp.impl;
 
 import org.tomitribe.chatterbox.xmpp.api.MessageException;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.MessageTextParam;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.Sender;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.SenderParam;
+import org.tomitribe.chatterbox.xmpp.api.inflow.MessageTextParam;
+import org.tomitribe.chatterbox.xmpp.api.inflow.Sender;
+import org.tomitribe.chatterbox.xmpp.api.inflow.SenderParam;
 import org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPActivationSpec;
 import org.tomitribe.util.editor.Converter;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.InvokeAllMatches;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.MessageText;
+import org.tomitribe.chatterbox.xmpp.api.inflow.InvokeAllMatches;
+import org.tomitribe.chatterbox.xmpp.api.inflow.MessageText;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
