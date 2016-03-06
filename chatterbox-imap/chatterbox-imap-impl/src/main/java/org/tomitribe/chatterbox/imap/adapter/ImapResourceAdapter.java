@@ -23,7 +23,9 @@ import org.tomitribe.chatterbox.imap.api.FromParam;
 import org.tomitribe.chatterbox.imap.api.InvokeAllMatches;
 import org.tomitribe.chatterbox.imap.api.Subject;
 import org.tomitribe.chatterbox.imap.api.SubjectParam;
+import org.tomitribe.util.Longs;
 import org.tomitribe.util.editor.Converter;
+import org.tomitribe.util.hash.XxHash64;
 
 import javax.mail.BodyPart;
 import javax.mail.Message;
@@ -83,11 +85,13 @@ public class ImapResourceAdapter implements ResourceAdapter {
     private String protocol;
 
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
+        LOGGER.info("Starting " + this);
         worker = new ImapCheckThread(this);
         worker.start();
     }
 
     public void stop() {
+        LOGGER.info("Stopping " + this);
         worker.cancel();
     }
 
@@ -426,5 +430,16 @@ public class ImapResourceAdapter implements ResourceAdapter {
 
     public void setProtocol(String protocol) {
         this.protocol = protocol;
+    }
+
+    @Override
+    public String toString() {
+        return "ImapResourceAdapter{" +
+                "host='" + host + '\'' +
+                ", port=" + port +
+                ", username='" + username + '\'' +
+                ", password='" + Longs.toHex(XxHash64.hash(password)) + '\'' +
+                ", protocol='" + protocol + '\'' +
+                '}';
     }
 }

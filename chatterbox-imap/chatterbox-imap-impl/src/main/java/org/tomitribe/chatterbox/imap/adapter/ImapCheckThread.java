@@ -16,6 +16,7 @@
  */
 package org.tomitribe.chatterbox.imap.adapter;
 
+import javax.mail.AuthenticationFailedException;
 import javax.mail.FetchProfile;
 import javax.mail.Flags;
 import javax.mail.Folder;
@@ -26,8 +27,13 @@ import javax.mail.Store;
 import javax.mail.search.FlagTerm;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ImapCheckThread extends Thread {
+
+    private static final Logger LOGGER = Logger.getLogger(ImapCheckThread.class.getName());
+
     private final ImapResourceAdapter resourceAdapter;
     private final Session session;
     private final AtomicBoolean stopped = new AtomicBoolean(false);
@@ -36,25 +42,43 @@ public class ImapCheckThread extends Thread {
         this.resourceAdapter = resourceAdapter;
         final Properties properties = System.getProperties();
         session = Session.getDefaultInstance(properties, null);
+        try {
+            // Test the connection
+            connect(session, resourceAdapter);
+        } catch (AuthenticationFailedException e) {
+            if ("imap.gmail.com".equals(resourceAdapter.getHost())) {
+                LOGGER.log(Level.SEVERE, "Failed to Connect " + resourceAdapter +"  Ensure 'access to less secure apps' is turned on in your gmail account", e);
+            } else {
+                LOGGER.log(Level.SEVERE, "Failed to Connect " + resourceAdapter, e);
+            }
+        } catch (MessagingException e) {
+            LOGGER.log(Level.SEVERE, "Failed to Connect " + resourceAdapter, e);
+        }
     }
 
     @Override
     public void run() {
         while (! stopped.get()) {
             try {
-                final Store store = session.getStore(resourceAdapter.getProtocol());
-                store.connect(resourceAdapter.getHost(), resourceAdapter.getPort(), resourceAdapter.getUsername(), resourceAdapter.getPassword());
+                final Store store = connect(session, resourceAdapter);
                 processFolder(store, "inbox");
             } catch (MessagingException e) {
-                // ignore
+                LOGGER.log(Level.WARNING, String.format("Failed to Connect %s %s: %s",
+                        resourceAdapter, e.getClass().getName(), e.getMessage()));
             }
 
             try {
-                Thread.sleep(10000);
+                Thread.sleep(5000);
             } catch (InterruptedException e) {
                 // ignore
             }
         }
+    }
+
+    private static Store connect(Session session, ImapResourceAdapter resourceAdapter) throws MessagingException {
+        final Store store = session.getStore(resourceAdapter.getProtocol());
+        store.connect(resourceAdapter.getHost(), resourceAdapter.getPort(), resourceAdapter.getUsername(), resourceAdapter.getPassword());
+        return store;
     }
 
     private void processFolder(Store store, String folderName) throws MessagingException {
