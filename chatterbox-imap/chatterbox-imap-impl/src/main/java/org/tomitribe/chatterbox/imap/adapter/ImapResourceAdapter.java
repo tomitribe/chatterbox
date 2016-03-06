@@ -27,6 +27,7 @@ import org.tomitribe.util.Longs;
 import org.tomitribe.util.editor.Converter;
 import org.tomitribe.util.hash.XxHash64;
 
+import javax.mail.Address;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -49,8 +50,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +87,13 @@ public class ImapResourceAdapter implements ResourceAdapter {
     @ConfigProperty(defaultValue = "imaps")
     private String protocol;
 
+    @ConfigProperty(defaultValue = "FINE")
+    private String deliveryLogLevel;
+
+    private Level level;
+
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
+        level = Level.parse(deliveryLogLevel.toLowerCase());
         LOGGER.info("Starting " + this);
         worker = new ImapCheckThread(this);
         worker.start();
@@ -130,7 +139,7 @@ public class ImapResourceAdapter implements ResourceAdapter {
         }
     }
 
-    public static class EndpointTarget {
+    public class EndpointTarget {
         private final MessageEndpoint messageEndpoint;
         private final Class<?> clazz;
 
@@ -140,6 +149,14 @@ public class ImapResourceAdapter implements ResourceAdapter {
         }
 
         public void invoke(Message message) {
+
+            // Wrapper for convenient logging
+            final Email email;
+            try {
+                email = new Email(message);
+            } catch (MessagingException e) {
+                throw new IllegalStateException(e);
+            }
 
             // find matching method(s)
 
@@ -156,27 +173,30 @@ public class ImapResourceAdapter implements ResourceAdapter {
                             .collect(Collectors.toList());
 
             if (matchingMethods == null || matchingMethods.size() == 0) {
-                // log this
+                LOGGER.log(Level.INFO, "No method to match " + email);
                 return;
             }
 
             if (this.clazz.isAnnotationPresent(InvokeAllMatches.class)) {
                 for (final Method method : matchingMethods) {
+                    LOGGER.log(level, "Invoking method " + method.toString() + " for " + email);
                     try {
                         invoke(method, InternetAddress.toString(message.getFrom()),
                                 message.getSubject(),
                                 getMessageText(message));
                     } catch (MessagingException e) {
-                        LOGGER.log(Level.SEVERE, "Unable to invoke method " + method.toString());
+                        LOGGER.log(Level.SEVERE, "Unable to invoke method " + method.toString() + " for " + email);
                     }
                 }
             } else {
+                final Method method = matchingMethods.get(0);
+                LOGGER.log(level, "Invoking method " + method.toString() + " for " + email);
                 try {
-                    invoke(matchingMethods.get(0), InternetAddress.toString(message.getFrom()),
+                    invoke(method, InternetAddress.toString(message.getFrom()),
                             message.getSubject(),
                             getMessageText(message));
                 } catch (MessagingException e) {
-                    LOGGER.log(Level.SEVERE, "Unable to invoke method " + matchingMethods.get(0).toString());
+                    LOGGER.log(Level.SEVERE, "Unable to invoke method " + method.toString() + " for " + email);
                 }
             }
         }
@@ -441,5 +461,35 @@ public class ImapResourceAdapter implements ResourceAdapter {
                 ", password='" + Longs.toHex(XxHash64.hash(password)) + '\'' +
                 ", protocol='" + protocol + '\'' +
                 '}';
+    }
+
+    private static class Email {
+        private final String sent;
+        private final String to;
+        private final String from;
+        private final String subject;
+
+        private Email(final Message message) throws MessagingException {
+            final Address[] recipients = message.getRecipients(Message.RecipientType.TO);
+            this.to = recipients[0].toString();
+            this.from = message.getFrom()[0].toString();
+            this.sent = format(message.getSentDate());
+            this.subject = message.getSubject();
+        }
+
+        private String format(Date sentDate) {
+            final SimpleDateFormat simpleDateFormat = new SimpleDateFormat();
+            return simpleDateFormat.format(sentDate);
+        }
+
+        @Override
+        public String toString() {
+            return "Email{" +
+                    "sent='" + sent + '\'' +
+                    ", to='" + to + '\'' +
+                    ", from='" + from + '\'' +
+                    ", subject='" + subject + '\'' +
+                    '}';
+        }
     }
 }
