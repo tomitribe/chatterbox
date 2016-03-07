@@ -47,11 +47,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Connector(description = "Twitter Resource Adapter", displayName = "Twitter Resource Adapter", eisType = "Twitter Resource Adapter", version = "1.0")
 public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeListener {
+
+    private static final Logger LOGGER = Logger.getLogger(TwitterResourceAdapter.class.getName());
 
     final Map<TwitterActivationSpec, EndpointTarget> targets = new ConcurrentHashMap<TwitterActivationSpec, EndpointTarget>();
     private TwitterStreamingClient client;
@@ -73,6 +77,9 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     private String accessTokenSecret;
 
     public void start(final BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
+
+        LOGGER.info("Starting " + this);
+
         client = new TwitterStreamingClient(this, consumerKey, consumerSecret, accessToken, accessTokenSecret);
         try {
             client.run();
@@ -82,6 +89,9 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     }
 
     public void stop() {
+
+        LOGGER.info("Stopping " + this);
+
         client.stop();
     }
 
@@ -92,6 +102,8 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
         final Class<?> endpointClass = twitterActivationSpec.getBeanClass() != null ? twitterActivationSpec
                 .getBeanClass() : messageEndpointFactory.getEndpointClass();
+
+        LOGGER.info("Deploying " + endpointClass.getName());
 
         final EndpointTarget target = new EndpointTarget(messageEndpoint, endpointClass);
         targets.put(twitterActivationSpec, target);
@@ -131,6 +143,9 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
         public void invoke(final Status status) {
 
+            // wrapper object for logging purposes
+            final TweetWrapper tweet = new TweetWrapper(status);
+
             // find matching method(s)
 
             final List<Method> matchingMethods =
@@ -146,15 +161,19 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
             if (matchingMethods == null || matchingMethods.size() == 0) {
                 // log this
+                LOGGER.log(Level.INFO, "No method to match " + tweet);
                 return;
             }
 
             if (this.clazz.isAnnotationPresent(InvokeAllMatches.class)) {
                 for (final Method method : matchingMethods) {
+                    LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + tweet);
                     invoke(method, status);
                 }
             } else {
-                invoke(matchingMethods.get(0), status);
+                final Method method = matchingMethods.get(0);
+                LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + tweet);
+                invoke(method, status);
             }
         }
 
@@ -288,5 +307,35 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
         }
 
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "TwitterResourceAdapter{" +
+                "consumerKey='" + consumerKey + '\'' +
+                ", consumerSecret='" + consumerSecret + '\'' +
+                ", accessToken='" + accessToken + '\'' +
+                ", accessTokenSecret='" + accessTokenSecret + '\'' +
+                '}';
+    }
+
+    public static class TweetWrapper {
+        private final String user;
+        private final String text;
+        //        private final String
+
+
+        public TweetWrapper(final Status status) {
+            user = status.getUser().getName();
+            text = status.getText();
+        }
+
+        @Override
+        public String toString() {
+            return "Tweet{" +
+                    "user='" + user + '\'' +
+                    ", text='" + text + '\'' +
+                    '}';
+        }
     }
 }
