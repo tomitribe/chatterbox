@@ -63,6 +63,7 @@
     <module>chatterbox-imap</module>
     <module>chatterbox-twitter</module>
     <module>chatterbox-xmpp</module>
+    <module>chatterbox-slack</module>
   </modules>
 
 </project>
