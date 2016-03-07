@@ -34,11 +34,11 @@
         </config-property>
         <outbound-resourceadapter>
             <connection-definition>
-                <managedconnectionfactory-class>org.tomitribe.chatterbox.slack.adapter.SlackManagedConnectionFactory</managedconnectionfactory-class>
+                <managedconnectionfactory-class>org.tomitribe.chatterbox.slack.adapter.out.SlackManagedConnectionFactory</managedconnectionfactory-class>
                 <connectionfactory-interface>org.tomitribe.chatterbox.slack.api.SlackConnectionFactory</connectionfactory-interface>
-                <connectionfactory-impl-class>org.tomitribe.chatterbox.slack.adapter.SlackConnectionFactoryImpl</connectionfactory-impl-class>
+                <connectionfactory-impl-class>org.tomitribe.chatterbox.slack.adapter.out.SlackConnectionFactoryImpl</connectionfactory-impl-class>
                 <connection-interface>org.tomitribe.chatterbox.slack.api.SlackConnection</connection-interface>
-                <connection-impl-class>org.tomitribe.chatterbox.slack.adapter.SlackConnectionImpl</connection-impl-class>
+                <connection-impl-class>org.tomitribe.chatterbox.slack.adapter.out.SlackConnectionImpl</connection-impl-class>
             </connection-definition>
             <transaction-support>NoTransaction</transaction-support>
             <reauthentication-support>false</reauthentication-support>

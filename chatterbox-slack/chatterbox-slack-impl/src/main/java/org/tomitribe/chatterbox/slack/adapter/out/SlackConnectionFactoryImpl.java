@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.tomitribe.chatterbox.slack.adapter;
+package org.tomitribe.chatterbox.slack.adapter.out;
 
 import org.tomitribe.chatterbox.slack.api.SlackConnection;
 import org.tomitribe.chatterbox.slack.api.SlackConnectionFactory;
