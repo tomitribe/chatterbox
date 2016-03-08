@@ -16,13 +16,13 @@
  */
 package org.tomitribe.chatterbox.twitter.adapter;
 
+import org.junit.Assert;
 import org.junit.Test;
-import org.superbiz.StatusBean;
+import org.superbiz.FavoriteHashTags;
 import org.tomitribe.chatterbox.twitter.api.InvokeAllMatches;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
 import org.tomitribe.chatterbox.twitter.api.UserParam;
-import twitter4j.User;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.endpoint.MessageEndpoint;
@@ -37,24 +37,44 @@ public class TwitterResourceAdapterTest {
         final Class<?> clazz = TweetBean.class;
         final TwitterResourceAdapter.EndpointTarget endpointTarget = new TwitterResourceAdapter().new EndpointTarget(new MyTweetBean(), clazz);
 
-        endpointTarget.invoke(new StatusAdaptor() {
-            @Override
-            public String getText() {
-                return "Testing connectors on #TomEE for #JavaOne";
-            }
-
-            @Override
-            public User getUser() {
-                return new UserAdaptor() {
-                    @Override
-                    public String getScreenName() {
-                        return "jongallimore";
-                    }
-                };
-            }
-        });
-
+        endpointTarget.invoke(new TestStatus("Testing connectors on #TomEE for #JavaOne", "jongallimore"));
     }
+
+    @Test
+    public void valuesSimple() throws Exception {
+        final Object o = new Object() {
+            @Tweet("do you like {thing}\\?")
+            public String like(@TweetParam("thing") String thing) {
+                return "I'm not sure if I like " + thing;
+            }
+        };
+
+        final Method method = o.getClass().getMethod("like", String.class);
+        final Object[] values = TwitterResourceAdapter.getValues(method, new TestStatus("@Bot @Bot do you like candy?", "Joe"));
+
+        Assert.assertEquals(1, values.length);
+        Assert.assertEquals("candy", values[0]);
+    }
+
+    @Test
+    public void valuesBetweenSpaces() throws Exception {
+        final Object o = new Object() {
+            @Tweet("what is {a} ?[*x] ?{b}")
+            public String math(@TweetParam("a") int a, @TweetParam("b") int b) {
+                return null;
+            }
+        };
+
+        final Method method = o.getClass().getMethod("math", int.class, int.class);
+
+        {
+            final Object[] values = TwitterResourceAdapter.getValues(method, new TestStatus("what is 4 x 7", "Joe"));
+            Assert.assertEquals(2, values.length);
+            Assert.assertEquals(new Integer(4), values[0]);
+            Assert.assertEquals(new Integer(7), values[1]);
+        }
+    }
+
 
     private static class MyTweetBean extends TweetBean implements MessageEndpoint {
 
@@ -77,7 +97,7 @@ public class TwitterResourceAdapterTest {
     @InvokeAllMatches
     private static class TweetBean {
 
-        private final static Logger LOGGER = Logger.getLogger(StatusBean.class.getName());
+        private final static Logger LOGGER = Logger.getLogger(FavoriteHashTags.class.getName());
 
         @Tweet(".*#TomEE.*")
         public void tomeeStatus(@TweetParam final String status, @UserParam final String user) {
@@ -94,5 +114,6 @@ public class TwitterResourceAdapterTest {
             LOGGER.info(String.format("New Tomitribe status: %s, by %s", status, user));
         }
     }
+
 
 }

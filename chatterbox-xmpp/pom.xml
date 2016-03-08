@@ -28,12 +28,12 @@
   <parent>
     <groupId>org.tomitribe</groupId>
     <artifactId>chatterbox-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
   </parent>
 
   <artifactId>chatterbox-xmpp-parent</artifactId>
   <packaging>pom</packaging>
-  <version>0.2-SNAPSHOT</version>
+  <version>0.3-SNAPSHOT</version>
   <name>Chatterbox :: XMPP</name>
 
   <properties>

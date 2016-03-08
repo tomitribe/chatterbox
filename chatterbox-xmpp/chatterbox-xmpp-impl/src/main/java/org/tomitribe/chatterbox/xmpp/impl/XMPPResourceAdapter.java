@@ -18,14 +18,6 @@
  */
 package org.tomitribe.chatterbox.xmpp.impl;
 
-import org.tomitribe.chatterbox.xmpp.api.MessageException;
-import org.tomitribe.chatterbox.xmpp.api.inflow.MessageTextParam;
-import org.tomitribe.chatterbox.xmpp.api.inflow.Sender;
-import org.tomitribe.chatterbox.xmpp.api.inflow.SenderParam;
-import org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPActivationSpec;
-import org.tomitribe.util.editor.Converter;
-import org.tomitribe.chatterbox.xmpp.api.inflow.InvokeAllMatches;
-import org.tomitribe.chatterbox.xmpp.api.inflow.MessageText;
 import org.jivesoftware.smack.Chat;
 import org.jivesoftware.smack.ChatManager;
 import org.jivesoftware.smack.ChatManagerListener;
@@ -36,7 +28,26 @@ import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
+import org.tomitribe.chatterbox.xmpp.api.MessageException;
+import org.tomitribe.chatterbox.xmpp.api.inflow.InvokeAllMatches;
+import org.tomitribe.chatterbox.xmpp.api.inflow.MessageText;
+import org.tomitribe.chatterbox.xmpp.api.inflow.MessageTextParam;
+import org.tomitribe.chatterbox.xmpp.api.inflow.Sender;
+import org.tomitribe.chatterbox.xmpp.api.inflow.SenderParam;
+import org.tomitribe.chatterbox.xmpp.impl.inflow.XMPPActivationSpec;
+import org.tomitribe.util.editor.Converter;
 
+import javax.resource.ResourceException;
+import javax.resource.spi.ActivationSpec;
+import javax.resource.spi.BootstrapContext;
+import javax.resource.spi.ConfigProperty;
+import javax.resource.spi.Connector;
+import javax.resource.spi.ResourceAdapter;
+import javax.resource.spi.ResourceAdapterInternalException;
+import javax.resource.spi.TransactionSupport;
+import javax.resource.spi.endpoint.MessageEndpoint;
+import javax.resource.spi.endpoint.MessageEndpointFactory;
+import javax.transaction.xa.XAResource;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -49,24 +60,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import javax.resource.ResourceException;
-import javax.resource.spi.ActivationSpec;
-import javax.resource.spi.BootstrapContext;
-import javax.resource.spi.ConfigProperty;
-import javax.resource.spi.Connector;
-import javax.resource.spi.ResourceAdapter;
-import javax.resource.spi.ResourceAdapterInternalException;
-import javax.resource.spi.TransactionSupport;
-import javax.resource.spi.endpoint.MessageEndpoint;
-import javax.resource.spi.endpoint.MessageEndpointFactory;
-
-import javax.transaction.xa.XAResource;
 
 @Connector(
         reauthenticationSupport = false,
@@ -76,7 +73,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
     private static final long serialVersionUID = 1L;
 
-    private static Logger log = Logger.getLogger(XMPPResourceAdapter.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(XMPPResourceAdapter.class.getName());
 
     final Map<XMPPActivationSpec, EndpointTarget> targets = new ConcurrentHashMap<XMPPActivationSpec, EndpointTarget>();
 
@@ -166,12 +163,12 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
     public void start(BootstrapContext ctx)
             throws ResourceAdapterInternalException {
-        log.finest("start()");
+        LOGGER.info("Starting " + this);
         connect();
     }
 
     public void stop() {
-        log.finest("stop()");
+        LOGGER.info("Stopping " + this);
         disconnect();
     }
 
@@ -181,20 +178,20 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
         try {
             connection.connect();
-            log.finest("Connected to " + host + ":" + port + "/" + serviceName);
+            LOGGER.finest("Connected to " + host + ":" + port + "/" + serviceName);
         } catch (XMPPException | SmackException | IOException e) {
-            log.log(Level.SEVERE, "Unable to connect to " + host + ":" + port + "/" + serviceName, e);
+            LOGGER.log(Level.SEVERE, "Unable to connect to " + host + ":" + port + "/" + serviceName, e);
         }
 
         try {
             connection.login(username, password);
-            log.finest("Logged in as " + username);
+            LOGGER.finest("Logged in as " + username);
 
             Presence presence = new Presence(Presence.Type.available);
             connection.sendPacket(presence);
 
         } catch (XMPPException | SmackException | IOException e) {
-            log.log(Level.SEVERE, "Unable to login as " + username, e);
+            LOGGER.log(Level.SEVERE, "Unable to login as " + username, e);
         }
 
         connected = true;
@@ -209,7 +206,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
                 connection.disconnect(new Presence(Presence.Type.unavailable));
             }
         } catch (SmackException.NotConnectedException e) {
-            log.log(Level.SEVERE, "Unable to logout", e);
+            LOGGER.log(Level.SEVERE, "Unable to logout", e);
         }
 
         connection = null;
@@ -230,7 +227,7 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
     public XAResource[] getXAResources(ActivationSpec[] specs)
             throws ResourceException {
-        log.finest("getXAResources()");
+        LOGGER.finest("getXAResources()");
         return null;
     }
 
@@ -256,6 +253,14 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
 
         public void invoke(Chat chat, Message message) {
 
+            // This method will be invoked essentially each keystroke made by the remote user
+            // We don't need to bother with this delivery logic until the user has pressed enter
+            // and fully sent the message.
+            if (message.getBody() == null) return;
+
+            // This chat message object exists for clean logging.
+            final ChatMessage chatMessage = new ChatMessage(chat, message);
+
             // find matching method(s)
 
             final List<Method> matchingMethods =
@@ -270,16 +275,19 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
                             .collect(Collectors.toList());
 
             if (matchingMethods == null || matchingMethods.size() == 0) {
-                // log this
+                LOGGER.log(Level.INFO, "No method to match " + chatMessage);
                 return;
             }
 
             if (this.clazz.isAnnotationPresent(InvokeAllMatches.class)) {
                 for (final Method method : matchingMethods) {
+                    LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + chatMessage);
                     invoke(method, chat.getParticipant(), message.getBody());
                 }
             } else {
-                invoke(matchingMethods.get(0), chat.getParticipant(), message.getBody());
+                final Method method = matchingMethods.get(0);
+                LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + chatMessage);
+                invoke(method, chat.getParticipant(), message.getBody());
             }
         }
 
@@ -418,5 +426,35 @@ public class XMPPResourceAdapter implements ResourceAdapter, Serializable, Messa
     @Override
     public void chatCreated(Chat chat, boolean b) {
         chat.addMessageListener(this);
+    }
+
+
+    public static class ChatMessage {
+        private final String sender;
+        private final String text;
+
+        public ChatMessage(Chat chat, Message message) {
+            this.sender = chat.getParticipant();
+            this.text = message.getBody();
+        }
+
+        @Override
+        public String toString() {
+            return "ChatMessage{" +
+                    "sender='" + sender + '\'' +
+                    ", text='" + text + '\'' +
+                    '}';
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "XMPPResourceAdapter{" +
+                "host='" + host + '\'' +
+                ", port=" + port +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", serviceName='" + serviceName + '\'' +
+                '}';
     }
 }

@@ -16,7 +16,6 @@
  */
 package org.superbiz;
 
-import org.tomitribe.chatterbox.twitter.api.InvokeAllMatches;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
 import org.tomitribe.chatterbox.twitter.api.TwitterUpdates;
@@ -27,25 +26,55 @@ import javax.ejb.MessageDriven;
 import java.util.logging.Logger;
 
 @MessageDriven(name = "Status")
-@InvokeAllMatches
-public class StatusBean implements TwitterUpdates {
+public class FavoriteHashTags implements TwitterUpdates {
 
-    private final static Logger LOGGER = Logger.getLogger(StatusBean.class.getName());
+    private final static Logger LOGGER = Logger.getLogger(FavoriteHashTags.class.getName());
 
     @Tweet(".*#TomEE.*")
-    public void tomeeStatus(@TweetParam final String status, @UserParam final String user) {
+    public String tomeeStatus(@TweetParam final String status, @UserParam final String user) {
+
         LOGGER.info(String.format("New status: %s, by %s", status, user));
+
+        return "#TomEE is awesome";
+    }
+
+    @Tweet(".*#JavaLand.*")
+    public String javaLand(@TweetParam final String status, @UserParam final String user) {
+
+        LOGGER.info(String.format("New JavaOne status: %s, by %s", status, user));
+
+        return "#JavaLand is awesome! Where else can you see a session then ride a rollercoster?";
     }
 
     @Tweet(".*#JavaOne.*")
-    public void javaoneStatus(@TweetParam final String status, @UserParam final String user) {
+    public String javaoneStatus(@TweetParam final String status, @UserParam final String user) {
+
         LOGGER.info(String.format("New JavaOne status: %s, by %s", status, user));
+
+        return "#JavaOne is where the cool tech showcases";
+    }
+
+    @Tweet(".*#NightHacking.*")
+    public String nightHacking(@TweetParam final String status, @UserParam final String user) {
+
+        LOGGER.info(String.format("New JavaOne status: %s, by %s", status, user));
+
+        return "#NightHacking Stephen Chin is like an extremely technical version of the Fonz, with robots.";
     }
 
     @User(".*jongallimore.*")
-    public void tomitribeStatus(@TweetParam final String status, @UserParam final String user) {
+    public String jgallimoreStatus(@TweetParam final String status, @UserParam final String user) {
+
         LOGGER.info(String.format("New Tomitribe status: %s, by %s", status, user));
+
+        return "Hey, Jon!";
     }
 
+    @User(".*dblevins.*")
+    public String dblevinsStatus(@TweetParam final String status, @UserParam final String user) {
 
+        LOGGER.info(String.format("New Tomitribe status: %s, by %s", status, user));
+
+        return "Hey, David!";
+    }
 }
