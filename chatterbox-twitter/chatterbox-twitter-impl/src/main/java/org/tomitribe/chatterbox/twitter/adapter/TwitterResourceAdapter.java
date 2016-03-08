@@ -142,25 +142,28 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     public void onStatus(final Status status) {
 
         final String username = status.getUser().getScreenName();
-        if (RESPONSE_MAP.containsKey(username)) {
+        final Response response = RESPONSE_MAP.remove(username);
+
+        if (response != null && response.getDialog() != null) {
             // pull the response object from the map
 
-            try {
-                final Response response = RESPONSE_MAP.remove(username);
-                final List<Method> matchingMethods = findMatchingMethods(response.getClass(), status);
+            final Object dialog = response.getDialog();
 
-                if (response.getClass().isAnnotationPresent(InvokeAllMatches.class)) {
+            try {
+                final List<Method> matchingMethods = findMatchingMethods(dialog.getClass(), status);
+
+                if (dialog.getClass().isAnnotationPresent(InvokeAllMatches.class)) {
                     for (final Method method : matchingMethods) {
                         LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
                         final Object[] values = getValues(method, status);
-                        final Object result = method.invoke(response, values);
+                        final Object result = method.invoke(dialog, values);
                         processResponse(status, result);
                     }
                 } else {
                     final Method method = matchingMethods.get(0);
                     LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
                     final Object[] values = getValues(method, status);
-                    final Object result = method.invoke(response, values);
+                    final Object result = method.invoke(dialog, values);
                     processResponse(status, result);
                 }
             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -250,7 +253,18 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     }
 
     private void replyTo(final Status status, final String reply) throws TwitterException {
-        final StatusUpdate statusUpdate = new StatusUpdate("@" + status.getUser().getScreenName() + " " + reply);
+        replyTo(status, reply, true);
+    }
+    private void replyTo(final Status status, final String reply, final boolean prefix) throws TwitterException {
+        final String message;
+
+        if (prefix) {
+            message = "@" + status.getUser().getScreenName() + " " + reply;
+        } else {
+            message = reply;
+        }
+
+        final StatusUpdate statusUpdate = new StatusUpdate(message);
         statusUpdate.setInReplyToStatusId(status.getId());
         twitter.updateStatus(statusUpdate);
     }
