@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.tomitribe</groupId>
     <artifactId>chatterbox-slack-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
   </parent>
 
   <artifactId>chatterbox-slack-rar</artifactId>

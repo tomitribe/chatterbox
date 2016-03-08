@@ -26,7 +26,7 @@
   <parent>
     <groupId>org.tomitribe</groupId>
     <artifactId>chatterbox-imap-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2</version>
   </parent>
 
   <artifactId>chatterbox-imap-impl</artifactId>
