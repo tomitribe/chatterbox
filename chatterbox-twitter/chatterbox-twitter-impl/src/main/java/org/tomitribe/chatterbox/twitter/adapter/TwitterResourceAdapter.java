@@ -250,7 +250,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     }
 
     private void replyTo(final Status status, final String reply) throws TwitterException {
-        final StatusUpdate statusUpdate = new StatusUpdate("@" + status.getUser().getScreenName() + ", " + reply);
+        final StatusUpdate statusUpdate = new StatusUpdate("@" + status.getUser().getScreenName() + " " + reply);
         statusUpdate.setInReplyToStatusId(status.getId());
         twitter.updateStatus(statusUpdate);
     }
