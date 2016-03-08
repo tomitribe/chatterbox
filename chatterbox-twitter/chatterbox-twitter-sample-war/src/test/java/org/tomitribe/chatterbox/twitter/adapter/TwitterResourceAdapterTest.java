@@ -35,7 +35,8 @@ public class TwitterResourceAdapterTest {
     public void testShouldInvokeMdb() throws Exception {
 
         final Class<?> clazz = TweetBean.class;
-        final TwitterResourceAdapter.EndpointTarget endpointTarget = new TwitterResourceAdapter.EndpointTarget(new MyTweetBean(), clazz);
+        final TwitterResourceAdapter.EndpointTarget endpointTarget = new TwitterResourceAdapter().new EndpointTarget(new MyTweetBean(), clazz);
+
         endpointTarget.invoke(new StatusAdaptor() {
             @Override
             public String getText() {

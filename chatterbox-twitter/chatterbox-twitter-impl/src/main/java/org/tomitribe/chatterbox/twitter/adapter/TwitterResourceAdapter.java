@@ -18,12 +18,18 @@ package org.tomitribe.chatterbox.twitter.adapter;
 
 import com.twitter.hbc.httpclient.ControlStreamException;
 import org.tomitribe.chatterbox.twitter.api.InvokeAllMatches;
+import org.tomitribe.chatterbox.twitter.api.Response;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
 import org.tomitribe.chatterbox.twitter.api.User;
 import org.tomitribe.chatterbox.twitter.api.UserParam;
 import org.tomitribe.util.editor.Converter;
 import twitter4j.Status;
+import twitter4j.StatusUpdate;
+import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.TwitterFactory;
+import twitter4j.auth.AccessToken;
 
 import javax.resource.ResourceException;
 import javax.resource.spi.ActivationSpec;
@@ -75,12 +81,21 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     @ConfigProperty
     @NotNull
     private String accessTokenSecret;
+    private Twitter twitter;
+
+    private static final Map<String, Response> RESPONSE_MAP = new ConcurrentHashMap<>();
+
 
     public void start(final BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
 
         LOGGER.info("Starting " + this);
 
         client = new TwitterStreamingClient(this, consumerKey, consumerSecret, accessToken, accessTokenSecret);
+        twitter = new TwitterFactory().getInstance();
+        twitter.setOAuthConsumer(consumerKey, consumerSecret);
+        twitter.setOAuthAccessToken(new AccessToken(accessToken, accessTokenSecret));
+
+
         try {
             client.run();
         } catch (InterruptedException | ControlStreamException | IOException e) {
@@ -89,9 +104,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
     }
 
     public void stop() {
-
         LOGGER.info("Stopping " + this);
-
         client.stop();
     }
 
@@ -127,12 +140,41 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
     @Override
     public void onStatus(final Status status) {
-        for (final EndpointTarget endpointTarget : this.targets.values()) {
-            endpointTarget.invoke(status);
+
+        final String username = status.getUser().getScreenName();
+        if (RESPONSE_MAP.containsKey(username)) {
+            // pull the response object from the map
+
+            try {
+                final Response response = RESPONSE_MAP.remove(username);
+                final List<Method> matchingMethods = findMatchingMethods(response.getClass(), status);
+
+                if (response.getClass().isAnnotationPresent(InvokeAllMatches.class)) {
+                    for (final Method method : matchingMethods) {
+                        LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
+                        final Object[] values = getValues(method, status);
+                        final Object result = method.invoke(response, values);
+                        processResponse(status, result);
+                    }
+                } else {
+                    final Method method = matchingMethods.get(0);
+                    LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
+                    final Object[] values = getValues(method, status);
+                    final Object result = method.invoke(response, values);
+                    processResponse(status, result);
+                }
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                LOGGER.severe("Unable to call response object:" + e.getMessage());
+                RESPONSE_MAP.remove(status.getUser().getScreenName());
+            }
+        } else {
+            for (final EndpointTarget endpointTarget : this.targets.values()) {
+                endpointTarget.invoke(status);
+            }
         }
     }
 
-    public static class EndpointTarget {
+    public class EndpointTarget {
         private final MessageEndpoint messageEndpoint;
         private final Class<?> clazz;
 
@@ -148,16 +190,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
             // find matching method(s)
 
-            final List<Method> matchingMethods =
-                    Arrays.asList(clazz.getDeclaredMethods())
-                            .stream()
-                            .sorted((m1, m2) -> m1.toString().compareTo(m2.toString()))
-                            .filter(this::isPublic)
-                            .filter(this::isNotFinal)
-                            .filter(this::isNotAbstract)
-                            .filter(m -> filterTweet(status, m))
-                            .filter(m -> filterUser(status, m))
-                            .collect(Collectors.toList());
+            final List<Method> matchingMethods = findMatchingMethods(clazz, status);
 
             if (matchingMethods == null || matchingMethods.size() == 0) {
                 // log this
@@ -177,48 +210,13 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
             }
         }
 
-        private boolean filterUser(final Status status, final Method m) {
-            return ! m.isAnnotationPresent(User.class) || "".equals(m.getAnnotation(User.class).value())
-                    || templateMatches(m.getAnnotation(User.class).value(), status.getUser().getScreenName());
-        }
-
-        private boolean filterTweet(final Status status, final Method m) {
-            return !m.isAnnotationPresent(Tweet.class) || "".equals(m.getAnnotation(Tweet.class).value())
-                    || templateMatches(m.getAnnotation(Tweet.class).value(), status.getText());
-        }
-
-        private boolean templateMatches(final String pattern, final String input) {
-            try {
-                if (Pattern.matches(pattern, input)) {
-                    return true;
-                }
-            } catch (Exception e) {
-                // ignore
-            }
-
-            final Template template = new Template(pattern);
-            final Map<String, List<String>> values = new HashMap<>();
-            return template.match(input, values);
-        }
-
-        private boolean isPublic(final Method m) {
-            return Modifier.isPublic(m.getModifiers());
-        }
-
-        private boolean isNotAbstract(final Method m) {
-            return !Modifier.isAbstract(m.getModifiers());
-        }
-
-        private boolean isNotFinal(final Method m) {
-            return !Modifier.isFinal(m.getModifiers());
-        }
-
         private void invoke(final Method method, final Status status) {
             try {
                 try {
                     messageEndpoint.beforeDelivery(method);
                     final Object[] values = getValues(method, status);
-                    method.invoke(messageEndpoint, values);
+                    final Object result = method.invoke(messageEndpoint, values);
+                    processResponse(status, result);
                 } finally {
                     messageEndpoint.afterDelivery();
                 }
@@ -226,6 +224,90 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    private void processResponse(final Status status, final Object result) {
+        if (Response.class.isInstance(result)) {
+            final Response response = Response.class.cast(result);
+            RESPONSE_MAP.put(status.getUser().getScreenName(), response);
+            try {
+                replyTo(status, response.getMessage());
+            } catch (TwitterException e) {
+                LOGGER.severe("Unable to send tweet" + e.getMessage());
+            }
+        } else {
+            RESPONSE_MAP.remove(status.getUser().getScreenName());
+        }
+
+        if (String.class.isInstance(result)) {
+            RESPONSE_MAP.remove(status.getUser().getScreenName());
+            try {
+                replyTo(status, String.class.cast(result));
+            } catch (TwitterException e) {
+                LOGGER.severe("Unable to send tweet" + e.getMessage());
+            }
+        }
+    }
+
+    private void replyTo(final Status status, final String reply) throws TwitterException {
+        final StatusUpdate statusUpdate = new StatusUpdate("@" + status.getUser().getScreenName() + ", " + reply);
+        statusUpdate.setInReplyToStatusId(status.getId());
+        twitter.updateStatus(statusUpdate);
+    }
+
+    private static List<Method> findMatchingMethods(final Class<?> clazz, final Status status) {
+        return Arrays.asList(clazz.getDeclaredMethods())
+                .stream()
+                .sorted((m1, m2) -> m1.toString().compareTo(m2.toString()))
+                .filter(TwitterResourceAdapter::isPublic)
+                .filter(TwitterResourceAdapter::isNotFinal)
+                .filter(TwitterResourceAdapter::isNotAbstract)
+                .filter(m -> filterTweet(status, m))
+                .filter(m -> filterUser(status, m))
+                .filter(m -> filterGetMethod(status, m))
+                .collect(Collectors.toList());
+    }
+
+    private static boolean filterUser(final Status status, final Method m) {
+        return ! m.isAnnotationPresent(User.class) || "".equals(m.getAnnotation(User.class).value())
+                || templateMatches(m.getAnnotation(User.class).value(), status.getUser().getScreenName());
+    }
+
+    private static boolean filterTweet(final Status status, final Method m) {
+        return !m.isAnnotationPresent(Tweet.class) || "".equals(m.getAnnotation(Tweet.class).value())
+                || templateMatches(m.getAnnotation(Tweet.class).value(), status.getText());
+    }
+
+    private static boolean filterGetMethod(final Status status, final Method m) {
+        return ! (Response.class.isAssignableFrom(m.getDeclaringClass())
+                && "getMessage".equals(m.getName())
+                && m.getParameterCount() == 0);
+    }
+
+    private static boolean templateMatches(final String pattern, final String input) {
+        try {
+            if (Pattern.matches(pattern, input)) {
+                return true;
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+
+        final Template template = new Template(pattern);
+        final Map<String, List<String>> values = new HashMap<>();
+        return template.match(input, values);
+    }
+
+    private static boolean isPublic(final Method m) {
+        return Modifier.isPublic(m.getModifiers());
+    }
+
+    private static boolean isNotAbstract(final Method m) {
+        return !Modifier.isAbstract(m.getModifiers());
+    }
+
+    private static  boolean isNotFinal(final Method m) {
+        return !Modifier.isFinal(m.getModifiers());
     }
 
     private static Object[] getValues(final Method method, final Status status) {
@@ -284,6 +366,10 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
         return values;
     }
 
+    public void tweet(final String tweet) throws TwitterException {
+        twitter.updateStatus(tweet);
+    }
+
     private static Template getTemplate(final Annotation annotation) {
         if (annotation == null) {
             return null;
@@ -326,7 +412,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
 
         public TweetWrapper(final Status status) {
-            user = status.getUser().getName();
+            user = status.getUser().getScreenName();
             text = status.getText();
         }
 
