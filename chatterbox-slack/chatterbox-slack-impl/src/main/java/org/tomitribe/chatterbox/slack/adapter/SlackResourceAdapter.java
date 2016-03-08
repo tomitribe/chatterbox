@@ -91,7 +91,7 @@ public class SlackResourceAdapter implements ResourceAdapter, EventListener {
     public void endpointActivation(final MessageEndpointFactory messageEndpointFactory, final ActivationSpec activationSpec)
             throws ResourceException
     {
-        final SlackActivationSpec telnetActivationSpec = (SlackActivationSpec) activationSpec;
+        final SlackActivationSpec slackActivationSpec = (SlackActivationSpec) activationSpec;
 
         workManager.scheduleWork(new Work() {
 
@@ -101,7 +101,7 @@ public class SlackResourceAdapter implements ResourceAdapter, EventListener {
                     final MessageEndpoint messageEndpoint = messageEndpointFactory.createEndpoint(null);
 
                     final EndpointTarget target = new EndpointTarget(messageEndpoint);
-                    final Class<?> endpointClass = telnetActivationSpec.getBeanClass() != null ? telnetActivationSpec
+                    final Class<?> endpointClass = slackActivationSpec.getBeanClass() != null ? slackActivationSpec
                             .getBeanClass() : messageEndpointFactory.getEndpointClass();
 
                     target.commands.addAll(Commands.get(endpointClass, target, null).values());
@@ -110,7 +110,7 @@ public class SlackResourceAdapter implements ResourceAdapter, EventListener {
                         main.add(cmd);
                     }
 
-                    targets.put(telnetActivationSpec, target);
+                    targets.put(slackActivationSpec, target);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
