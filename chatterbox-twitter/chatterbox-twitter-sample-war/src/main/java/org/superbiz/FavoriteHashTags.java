@@ -62,19 +62,4 @@ public class FavoriteHashTags implements TwitterUpdates {
         return "#NightHacking Stephen Chin is like an extremely technical version of the Fonz, with robots.";
     }
 
-    @User(".*jongallimore.*")
-    public String jgallimoreStatus(@TweetParam final String status, @UserParam final String user) {
-
-        LOGGER.info(String.format("New Tomitribe status: %s, by %s", status, user));
-
-        return "Hey, Jon!";
-    }
-
-    @User(".*dblevins.*")
-    public String dblevinsStatus(@TweetParam final String status, @UserParam final String user) {
-
-        LOGGER.info(String.format("New Tomitribe status: %s, by %s", status, user));
-
-        return "Hey, David!";
-    }
 }
