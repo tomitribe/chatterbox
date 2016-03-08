@@ -20,16 +20,12 @@ import org.tomitribe.chatterbox.twitter.api.Response;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
 import org.tomitribe.chatterbox.twitter.api.TwitterUpdates;
+import org.tomitribe.chatterbox.twitter.api.UserParam;
 
 import javax.ejb.MessageDriven;
 
 @MessageDriven(name = "Status")
 public class KnockKnock implements TwitterUpdates {
-
-    @Tweet(".*do you like {thing}?")
-    public String like(@TweetParam("thing") String thing) {
-        return "I'm not sure if I like "+thing;
-    }
 
     @Tweet(".*KNOCK KNOCK.*")
     public String loudKnock() {
@@ -46,10 +42,21 @@ public class KnockKnock implements TwitterUpdates {
 
     public class WhosThere {
 
-        @Tweet(".* {who}")
-        public Response who(@TweetParam("who") final String who) {
-            return Response.message(who + " who?")
-                    .dialog(new Who())
+        @Tweet("{who}")
+        public Response who(@TweetParam("who") final String who, @UserParam final String user) {
+            if (who.equals(user)) {
+                return Response.message("You know how knock knock jokes work, right?")
+                        .build();
+            } else {
+                return Response.message(who + " who?")
+                        .build();
+            }
+        }
+
+        @Tweet("(?i)Banana")
+        public Response orange() {
+            return Response.message("Orange you glad I didn't say Banana again.  Try again, who's there?")
+                    .dialog(this)
                     .build();
         }
     }

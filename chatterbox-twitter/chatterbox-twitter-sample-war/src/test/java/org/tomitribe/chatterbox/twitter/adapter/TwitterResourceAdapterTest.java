@@ -18,7 +18,7 @@ package org.tomitribe.chatterbox.twitter.adapter;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.superbiz.StatusBean;
+import org.superbiz.FavoriteHashTags;
 import org.tomitribe.chatterbox.twitter.api.InvokeAllMatches;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
@@ -66,11 +66,13 @@ public class TwitterResourceAdapterTest {
         };
 
         final Method method = o.getClass().getMethod("math", int.class, int.class);
-        final Object[] values = TwitterResourceAdapter.getValues(method, new TestStatus("what is 4 x 7", "Joe"));
 
-        Assert.assertEquals(2, values.length);
-        Assert.assertEquals(new Integer(4), values[0]);
-        Assert.assertEquals(new Integer(7), values[1]);
+        {
+            final Object[] values = TwitterResourceAdapter.getValues(method, new TestStatus("what is 4 x 7", "Joe"));
+            Assert.assertEquals(2, values.length);
+            Assert.assertEquals(new Integer(4), values[0]);
+            Assert.assertEquals(new Integer(7), values[1]);
+        }
     }
 
 
@@ -95,7 +97,7 @@ public class TwitterResourceAdapterTest {
     @InvokeAllMatches
     private static class TweetBean {
 
-        private final static Logger LOGGER = Logger.getLogger(StatusBean.class.getName());
+        private final static Logger LOGGER = Logger.getLogger(FavoriteHashTags.class.getName());
 
         @Tweet(".*#TomEE.*")
         public void tomeeStatus(@TweetParam final String status, @UserParam final String user) {
