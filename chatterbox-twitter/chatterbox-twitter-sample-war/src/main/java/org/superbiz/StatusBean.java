@@ -27,7 +27,6 @@ import javax.ejb.MessageDriven;
 import java.util.logging.Logger;
 
 @MessageDriven(name = "Status")
-@InvokeAllMatches
 public class StatusBean implements TwitterUpdates {
 
     private final static Logger LOGGER = Logger.getLogger(StatusBean.class.getName());

@@ -154,14 +154,14 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
                 if (dialog.getClass().isAnnotationPresent(InvokeAllMatches.class)) {
                     for (final Method method : matchingMethods) {
-                        LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
+                        LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + getNormalizedText(status));
                         final Object[] values = getValues(method, status);
                         final Object result = method.invoke(dialog, values);
                         processResponse(status, result);
                     }
                 } else {
                     final Method method = matchingMethods.get(0);
-                    LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + status.getText());
+                    LOGGER.log(Level.INFO, "Invoking method " + method.toString() + " for " + getNormalizedText(status));
                     final Object[] values = getValues(method, status);
                     final Object result = method.invoke(dialog, values);
                     processResponse(status, result);
@@ -289,7 +289,15 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
 
     private static boolean filterTweet(final Status status, final Method m) {
         return !m.isAnnotationPresent(Tweet.class) || "".equals(m.getAnnotation(Tweet.class).value())
-                || templateMatches(m.getAnnotation(Tweet.class).value(), status.getText());
+                || templateMatches(m.getAnnotation(Tweet.class).value(), getNormalizedText(status));
+    }
+
+    private static String getNormalizedText(Status status) {
+        String text = status.getText();
+        while (text.startsWith("@")) {
+            text = text.replaceFirst("@?(\\w){1,15}(\\s+)","");
+        }
+        return text;
     }
 
     private static boolean filterGetMethod(final Status status, final Method m) {
@@ -324,7 +332,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
         return !Modifier.isFinal(m.getModifiers());
     }
 
-    private static Object[] getValues(final Method method, final Status status) {
+    public static Object[] getValues(final Method method, final Status status) {
 
         if (method == null) {
             return null;
@@ -338,7 +346,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
         final Template tweetTemplate = getTemplate(method.getAnnotation(Tweet.class));
         final Map<String, List<String>> tweetParamValues = new HashMap<>();
         if (tweetTemplate != null) {
-            tweetTemplate.match(status.getText(), tweetParamValues);
+            tweetTemplate.match(getNormalizedText(status), tweetParamValues);
         }
 
         final Template userTemplate = getTemplate(method.getAnnotation(User.class));
@@ -357,7 +365,7 @@ public class TwitterResourceAdapter implements ResourceAdapter, StatusChangeList
             if (parameter.isAnnotationPresent(TweetParam.class)) {
                 final TweetParam tweetParam = parameter.getAnnotation(TweetParam.class);
                 if (tweetParam.value() == null || tweetParam.value().length() == 0) {
-                    values[i] = Converter.convert(status.getText(), parameter.getType(), null);
+                    values[i] = Converter.convert(getNormalizedText(status), parameter.getType(), null);
                 } else {
                     final List<String> paramValues = tweetParamValues.get(tweetParam.value());
                     final String paramValue = paramValues == null || paramValues.size() == 0 ? null : paramValues.get(0);

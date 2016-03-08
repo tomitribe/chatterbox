@@ -20,15 +20,24 @@ import org.tomitribe.chatterbox.twitter.api.Response;
 import org.tomitribe.chatterbox.twitter.api.Tweet;
 import org.tomitribe.chatterbox.twitter.api.TweetParam;
 import org.tomitribe.chatterbox.twitter.api.TwitterUpdates;
-import org.tomitribe.chatterbox.twitter.api.UserParam;
 
 import javax.ejb.MessageDriven;
 
 @MessageDriven(name = "Status")
-public class StatusBean implements TwitterUpdates {
+public class KnockKnock implements TwitterUpdates {
 
-    @Tweet("(?i).*Knock knock.*")
-    public Response knockKnock(@TweetParam final String status, @UserParam final String user) {
+    @Tweet(".*do you like {thing}?")
+    public String like(@TweetParam("thing") String thing) {
+        return "I'm not sure if I like "+thing;
+    }
+
+    @Tweet(".*KNOCK KNOCK.*")
+    public String loudKnock() {
+        return "Not so loud, you're giving me a headache!";
+    }
+
+    @Tweet(".*[Kk]nock(,? |-)[Kk]nock.*")
+    public Response knockKnock() {
 
         return Response.message("Who's there?")
                 .dialog(new WhosThere())
@@ -36,12 +45,9 @@ public class StatusBean implements TwitterUpdates {
     }
 
     public class WhosThere {
-        public Response who(@TweetParam final String status, @UserParam final String user) {
-            String who = status;
-            if (status != null && status.length() > 0) {
-                who = status.replaceAll("@?(\\w){1,15}(\\s+)", ""); // strip off any referenced usernames
-            }
 
+        @Tweet(".* {who}")
+        public Response who(@TweetParam("who") final String who) {
             return Response.message(who + " who?")
                     .dialog(new Who())
                     .build();
@@ -50,7 +56,7 @@ public class StatusBean implements TwitterUpdates {
 
     public class Who {
 
-        public String punchline(@TweetParam final String status, @UserParam final String user) {
+        public String punchline() {
             return "Haha, lol. That's a good one, I'll have to remember that.";
         }
     }
