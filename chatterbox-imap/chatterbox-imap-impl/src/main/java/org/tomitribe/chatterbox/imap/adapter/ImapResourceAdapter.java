@@ -93,7 +93,7 @@ public class ImapResourceAdapter implements ResourceAdapter {
     private Level level;
 
     public void start(BootstrapContext bootstrapContext) throws ResourceAdapterInternalException {
-        level = Level.parse(deliveryLogLevel.toLowerCase());
+        level = Level.parse(deliveryLogLevel);
         LOGGER.info("Starting " + this);
         worker = new ImapCheckThread(this);
         worker.start();
