@@ -49,6 +49,7 @@ public class KnockKnock implements TwitterUpdates {
                         .build();
             } else {
                 return Response.message(who + " who?")
+                        .dialog(new Who())
                         .build();
             }
         }
