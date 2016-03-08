@@ -30,7 +30,7 @@ public class StatusBean implements TwitterUpdates {
 
     private final static Logger LOGGER = Logger.getLogger(StatusBean.class.getName());
 
-    @Tweet(".*Knock knock.*")
+    @Tweet("(?i).*Knock knock.*")
     public Response knockKnock(@TweetParam final String status, @UserParam final String user) {
         return new WhosThere();
     }
