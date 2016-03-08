@@ -58,6 +58,11 @@
                 <version>2.2.0</version>
             </dependency>
             <dependency>
+                <groupId>org.twitter4j</groupId>
+                <artifactId>twitter4j</artifactId>
+                <version>2.2.5</version>
+            </dependency>
+            <dependency>
                 <groupId>com.twitter</groupId>
                 <artifactId>hbc-twitter4j</artifactId>
                 <version>2.2.0</version>
@@ -74,6 +79,7 @@
         <module>chatterbox-twitter-impl</module>
         <module>chatterbox-twitter-rar</module>
         <module>chatterbox-twitter-sample-war</module>
+        <module>chatterbox-twitter-knock-knock</module>
     </modules>
     <build>
         <defaultGoal>install</defaultGoal>
