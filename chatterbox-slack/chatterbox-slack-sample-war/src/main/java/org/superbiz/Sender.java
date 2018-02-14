@@ -16,8 +16,8 @@
  */
 package org.superbiz;
 
-import org.tomitribe.chatterbox.slack.api.SlackConnection;
-import org.tomitribe.chatterbox.slack.api.SlackConnectionFactory;
+import org.apache.tomee.chatterbox.slack.api.SlackConnection;
+import org.apache.tomee.chatterbox.slack.api.SlackConnectionFactory;
 
 import javax.annotation.Resource;
 import javax.ejb.Lock;

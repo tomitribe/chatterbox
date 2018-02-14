@@ -16,9 +16,9 @@
  */
 package org.superbiz;
 
-import org.tomitribe.chatterbox.twitter.api.Tweet;
-import org.tomitribe.chatterbox.twitter.api.TweetParam;
-import org.tomitribe.chatterbox.twitter.api.TwitterUpdates;
+import org.apache.tomee.chatterbox.twitter.api.Tweet;
+import org.apache.tomee.chatterbox.twitter.api.TweetParam;
+import org.apache.tomee.chatterbox.twitter.api.TwitterUpdates;
 
 import javax.ejb.MessageDriven;
 

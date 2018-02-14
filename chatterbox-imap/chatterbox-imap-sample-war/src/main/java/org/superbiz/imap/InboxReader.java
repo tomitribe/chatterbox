@@ -16,11 +16,11 @@
  */
 package org.superbiz.imap;
 
-import org.tomitribe.chatterbox.imap.api.BodyParam;
-import org.tomitribe.chatterbox.imap.api.FromParam;
-import org.tomitribe.chatterbox.imap.api.MailListener;
-import org.tomitribe.chatterbox.imap.api.Subject;
-import org.tomitribe.chatterbox.imap.api.SubjectParam;
+import org.apache.tomee.chatterbox.imap.api.BodyParam;
+import org.apache.tomee.chatterbox.imap.api.FromParam;
+import org.apache.tomee.chatterbox.imap.api.MailListener;
+import org.apache.tomee.chatterbox.imap.api.Subject;
+import org.apache.tomee.chatterbox.imap.api.SubjectParam;
 
 import javax.ejb.MessageDriven;
 import java.util.logging.Level;

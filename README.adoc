@@ -169,26 +169,3 @@ This connector has the following configuration options:
 |===
 
 
-= Getting Started with Connectors
-
-For a simple project that shows all of the above connectors plus the
-Sheldon SSH connector, see the following
-
- - https://github.com/tomitribe/chatterbox-samples
-
-For the simplest *Inbound* Connector and matching MDB, see
-this example which is just
-
- - https://github.com/tomitribe/connector-starter-project-inbound
-
-To see an example of both *Inbound* and *Outbound* Connectors, see
-this example.  Be warned, however, *Outbound* Connectors are advanced
- and should not be attempted unless you are familiar with connectors.
-
- - https://github.com/tomitribe/connector-starter-project
-
-To see an example of Connectors that use the *WorkManager* to do work
-in container-managed threads as well as integrate *Security*, see
-this example.  This is the most advanced of them all.
-
- - https://github.com/tomitribe/connector-starter-project-with-security

@@ -16,8 +16,8 @@
  */
 package org.superbiz;
 
+import org.apache.tomee.chatterbox.slack.api.InboundListener;
 import org.tomitribe.crest.api.Command;
-import org.tomitribe.chatterbox.slack.api.InboundListener;
 import org.tomitribe.util.PrintString;
 
 import javax.ejb.MessageDriven;

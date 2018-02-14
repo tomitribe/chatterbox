@@ -18,15 +18,13 @@
   ~ under the License.
   -->
 
-<!-- $Rev: 1387962 $ $Date: 2012-09-20 05:53:17 -0500 (Thu, 20 Sep 2012)
-  $ -->
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.tomitribe</groupId>
+    <groupId>org.apache.tomee.chatterbox</groupId>
     <artifactId>chatterbox-parent</artifactId>
     <version>0.3-SNAPSHOT</version>
   </parent>
@@ -46,23 +44,8 @@
     <smack-core.version>4.0.6</smack-core.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>snapshots</id>
-      <url>http://repository.tomitribe.com/content/repositories/snapshots</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </repository>
-  </repositories>
-
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.tomitribe</groupId>
-        <artifactId>tomitribe-util</artifactId>
-        <version>1.1.0</version>
-      </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>

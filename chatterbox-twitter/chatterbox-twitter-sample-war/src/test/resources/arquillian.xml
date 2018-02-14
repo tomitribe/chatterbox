@@ -16,14 +16,14 @@
   ~ limitations under the License.
   -->
 <arquillian
-        >
+    >
 
-    <container qualifier="tomee" default="true">
-        <configuration>
-            <property name="classifier">plus</property>
-            <property name="httpPort">-1</property>
-            <property name="stopPort">-1</property>
-            <property name="ajpPort">-1</property>
-        </configuration>
-    </container>
+  <container qualifier="tomee" default="true">
+    <configuration>
+      <property name="classifier">plus</property>
+      <property name="httpPort">-1</property>
+      <property name="stopPort">-1</property>
+      <property name="ajpPort">-1</property>
+    </configuration>
+  </container>
 </arquillian>
