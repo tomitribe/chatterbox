@@ -1,3 +1,3 @@
-This repository as been discontinued. Tomitribe has donated the code to the Apache Software Foundation.
+This repository has been discontinued. Tomitribe has donated the code to the Apache Software Foundation.
 
 Code is under the Apache TomEE unbrella and can be found at https://github.com/apache/tomee-chatterbox
